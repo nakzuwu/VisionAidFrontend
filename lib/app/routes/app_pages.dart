@@ -4,6 +4,8 @@ import '../modules/auth/login/bindings/auth_login_binding.dart';
 import '../modules/auth/login/views/auth_login_view.dart';
 import '../modules/auth/register/bindings/auth_register_binding.dart';
 import '../modules/auth/register/views/auth_register_view.dart';
+import '../modules/calendar/bindings/calendar_binding.dart';
+import '../modules/calendar/views/calendar_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
@@ -19,7 +21,7 @@ class AppPages {
   static final routes = [
     GetPage(
       name: _Paths.HOME,
-      page: () => const HomeView(),
+      page: () =>  HomeView(),
       binding: HomeBinding(),
     ),
     GetPage(
@@ -36,6 +38,11 @@ class AppPages {
       name: _Paths.AUTH_REGISTER,
       page: () => RegisterView(),
       binding: AuthRegisterBinding(),
+    ),
+    GetPage(
+      name: _Paths.CALENDAR,
+      page: () => const CalendarView(),
+      binding: CalendarBinding(),
     ),
   ];
 }
