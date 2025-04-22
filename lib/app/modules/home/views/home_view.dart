@@ -12,7 +12,7 @@ class HomeView extends GetView<HomeController> {
       backgroundColor: Colors.white,
       bottomNavigationBar: BottomNavBar(currentIndex: 0),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.yellow,
+        backgroundColor: Colors.yellow[700],
         onPressed: () {},
         child: const Icon(Icons.add),
       ),

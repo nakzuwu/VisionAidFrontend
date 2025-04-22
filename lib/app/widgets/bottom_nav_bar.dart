@@ -4,30 +4,69 @@ import '../routes/app_pages.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
-  const BottomNavBar({required this.currentIndex});
+
+  const BottomNavBar({super.key, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
       notchMargin: 8,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.home),
-            onPressed: () => Get.toNamed(Routes.HOME),
-            color: currentIndex == 0 ? Colors.yellow : Colors.grey,
-          ),
-          IconButton(
-            icon: const Icon(Icons.calendar_today),
-            onPressed: () => Get.toNamed(Routes.CALENDAR),
-            color: currentIndex == 1 ? Colors.yellow : Colors.grey,
-          ),
-          const SizedBox(width: 48), // untuk FAB space
-          IconButton(icon: const Icon(Icons.person), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Custom HOME Button
+            GestureDetector(
+              onTap: () => Get.toNamed(Routes.HOME),
+              child: Transform.translate(
+                offset: const Offset(0, -12),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.yellow[700],
+                    border: Border.all(color: Colors.white, width: 4),
+                  ),
+                  child: const Icon(Icons.home, color: Colors.white, size: 28),
+                ),
+              ),
+            ),
+
+            // Calendar
+            IconButton(
+              icon: Icon(
+                Icons.calendar_today,
+                size: currentIndex == 1 ? 30 : 26,
+                weight: currentIndex == 1 ? 800 : 400,
+              ),
+              onPressed: () => Get.toNamed(Routes.CALENDAR),
+              color: Colors.grey,
+            ),
+            const SizedBox(width: 48), // FAB space (untuk tombol + di luar navbar)
+            // Folder
+            IconButton(
+              icon: Icon(
+                Icons.folder,
+                size: currentIndex == 2 ? 30 : 26,
+                weight: currentIndex == 2 ? 800 : 400,
+              ),
+              onPressed: () => Get.toNamed(Routes.FOLDER),
+              color: Colors.grey,
+            ),
+            // Settings
+            IconButton(
+              icon: Icon(
+                Icons.settings,
+                size: currentIndex == 3 ? 30 : 26,
+                weight: currentIndex == 3 ? 800 : 400,
+              ),
+              onPressed: () {}, // kasih aksi nanti ya bestie
+              color: Colors.grey,
+            ),
+          ],
+        ),
       ),
     );
   }

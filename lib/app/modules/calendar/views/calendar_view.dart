@@ -13,7 +13,7 @@ class CalendarView extends GetView<CalendarController> {
       backgroundColor: Colors.white,
       bottomNavigationBar: BottomNavBar(currentIndex: 1),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.yellow,
+        backgroundColor: Colors.yellow[700],
         onPressed: () {},
         child: const Icon(Icons.add),
       ),
