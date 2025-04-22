@@ -14,16 +14,15 @@ class LoginView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo Placeholder
-              Image.asset(
-                'assets/logo.png', // Ganti dengan path logomu nanti
-                height: 120,
-              ),
+              Image.asset('assets/logo.png', height: 120),
               const SizedBox(height: 24),
 
               // Login Card
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -101,7 +100,7 @@ class LoginView extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          onPressed: () {},
+                          onPressed: () => Get.toNamed('/home'),
                           child: const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 20),
                             child: Text(
@@ -109,7 +108,7 @@ class LoginView extends StatelessWidget {
                               style: TextStyle(color: Colors.black),
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ],

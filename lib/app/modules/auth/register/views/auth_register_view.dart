@@ -75,9 +75,7 @@ class RegisterView extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        onPressed: () {
-                          // TODO: register logic
-                        },
+                        onPressed: ()  => Get.toNamed('/home'),
                         child: const Text("Register"),
                       ),
                     ),
@@ -90,9 +88,7 @@ class RegisterView extends StatelessWidget {
                 children: [
                   const Text("Sudah punya akun? "),
                   GestureDetector(
-                    onTap: () {
-                      // TODO: go to login page
-                    },
+                    onTap: () => Get.toNamed('/login'),
                     child: const Text(
                       "Login",
                       style: TextStyle(color: Colors.lightBlue),
