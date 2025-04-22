@@ -6,6 +6,8 @@ import '../modules/auth/register/bindings/auth_register_binding.dart';
 import '../modules/auth/register/views/auth_register_view.dart';
 import '../modules/calendar/bindings/calendar_binding.dart';
 import '../modules/calendar/views/calendar_view.dart';
+import '../modules/folder/bindings/folder_binding.dart';
+import '../modules/folder/views/folder_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
@@ -17,11 +19,12 @@ class AppPages {
   AppPages._();
 
   static const INITIAL = Routes.HOME;
+  
 
   static final routes = [
     GetPage(
       name: _Paths.HOME,
-      page: () =>  HomeView(),
+      page: () => HomeView(),
       binding: HomeBinding(),
     ),
     GetPage(
@@ -43,6 +46,11 @@ class AppPages {
       name: _Paths.CALENDAR,
       page: () => const CalendarView(),
       binding: CalendarBinding(),
+    ),
+    GetPage(
+      name: _Paths.FOLDER,
+      page: () => const FolderView(),
+      binding: FolderBinding(),
     ),
   ];
 }
