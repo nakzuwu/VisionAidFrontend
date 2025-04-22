@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/auth_register_controller.dart';
 
 class RegisterView extends StatelessWidget {
-  const RegisterView({super.key});
+  RegisterView({super.key});
+  final controller = Get.put(RegisterController());
 
   @override
   Widget build(BuildContext context) {
@@ -31,35 +33,29 @@ class RegisterView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Register",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const Text("Register", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 20),
-                    _buildTextField(label: "Nama Pengguna"),
-                    _buildTextField(label: "Email"),
-                    _buildTextField(label: "Password", obscureText: true),
-                    _buildTextField(
-                      label: "Confirm Password",
-                      obscureText: true,
-                    ),
+                    _buildTextField(label: "Nama Pengguna", controller: controller.usernameC),
+                    _buildTextField(label: "Email", controller: controller.emailC),
+                    _buildTextField(label: "Password", controller: controller.passwordC, obscureText: true),
+                    _buildTextField(label: "Confirm Password", controller: controller.passwordC, obscureText: true),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Checkbox(value: false, onChanged: (_) {}),
-                        const Text("I agree to the "),
-                        GestureDetector(
-                          onTap: () {},
-                          child: const Text(
-                            "terms & conditions",
-                            style: TextStyle(color: Colors.lightBlue),
-                          ),
-                        ),
-                      ],
-                    ),
+                    Obx(() => Row(
+                          children: [
+                            Checkbox(
+                              value: controller.agreeTerms.value,
+                              onChanged: controller.toggleAgreeTerms,
+                            ),
+                            const Text("I agree to the "),
+                            GestureDetector(
+                              onTap: () {},
+                              child: const Text(
+                                "terms & conditions",
+                                style: TextStyle(color: Colors.lightBlue),
+                              ),
+                            ),
+                          ],
+                        )),
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
@@ -71,11 +67,9 @@ class RegisterView extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          textStyle: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        onPressed: ()  => Get.toNamed('/home'),
+                        onPressed: controller.register,
                         child: const Text("Register"),
                       ),
                     ),
@@ -89,10 +83,7 @@ class RegisterView extends StatelessWidget {
                   const Text("Sudah punya akun? "),
                   GestureDetector(
                     onTap: () => Get.toNamed('/login'),
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(color: Colors.lightBlue),
-                    ),
+                    child: const Text("Login", style: TextStyle(color: Colors.lightBlue)),
                   ),
                 ],
               ),
@@ -103,13 +94,18 @@ class RegisterView extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField({required String label, bool obscureText = false}) {
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    bool obscureText = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         TextField(
+          controller: controller,
           obscureText: obscureText,
           decoration: InputDecoration(
             filled: true,
@@ -118,10 +114,7 @@ class RegisterView extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
         ),
         const SizedBox(height: 14),

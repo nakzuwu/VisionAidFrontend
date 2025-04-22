@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/auth_login_controller.dart'; // sesuaikan path-nya
 
 class LoginView extends StatelessWidget {
-  const LoginView({Key? key}) : super(key: key);
+  final controller = Get.put(LoginController());
+
+  LoginView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,12 +20,9 @@ class LoginView extends StatelessWidget {
               Image.asset('assets/logo.png', height: 120),
               const SizedBox(height: 24),
 
-              // Login Card
+              // Card
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 32,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -37,76 +37,53 @@ class LoginView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const Text('Login', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 20),
 
                     const Text('Nama Pengguna'),
                     const SizedBox(height: 6),
                     TextField(
-                      decoration: InputDecoration(
-                        fillColor: const Color(0xFFE0E0E0),
-                        filled: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
+                      controller: controller.usernameController,
+                      decoration: _inputDecoration(),
                     ),
                     const SizedBox(height: 16),
 
                     const Text('Kata Sandi'),
                     const SizedBox(height: 6),
                     TextField(
+                      controller: controller.passwordController,
                       obscureText: true,
-                      decoration: InputDecoration(
-                        fillColor: const Color(0xFFE0E0E0),
-                        filled: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
+                      decoration: _inputDecoration(),
                     ),
 
                     const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Checkbox(value: false, onChanged: (val) {}),
-                        const Text('Ingat Kata Sandi Saya'),
-                      ],
-                    ),
+                    Obx(() => Row(
+                          children: [
+                            Checkbox(
+                              value: controller.rememberMe.value,
+                              onChanged: controller.toggleRememberMe,
+                            ),
+                            const Text('Ingat Kata Sandi Saya'),
+                          ],
+                        )),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
                           onPressed: () {},
-                          child: const Text(
-                            'Bantuan',
-                            style: TextStyle(color: Colors.lightBlue),
-                          ),
+                          child: const Text('Bantuan', style: TextStyle(color: Colors.lightBlue)),
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFF9D93D),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             elevation: 0,
                           ),
-                          onPressed: () => Get.toNamed('/home'),
+                          onPressed: controller.login,
                           child: const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Text(
-                              'Login',
-                              style: TextStyle(color: Colors.black),
-                            ),
+                            child: Text('Login', style: TextStyle(color: Colors.black)),
                           ),
                         ),
                       ],
@@ -122,16 +99,24 @@ class LoginView extends StatelessWidget {
                   const Text('Belum punya akun? '),
                   GestureDetector(
                     onTap: () => Get.toNamed('/register'),
-                    child: const Text(
-                      'register',
-                      style: TextStyle(color: Colors.lightBlue),
-                    ),
+                    child: const Text('register', style: TextStyle(color: Colors.lightBlue)),
                   ),
                 ],
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration() {
+    return InputDecoration(
+      fillColor: const Color(0xFFE0E0E0),
+      filled: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
       ),
     );
   }

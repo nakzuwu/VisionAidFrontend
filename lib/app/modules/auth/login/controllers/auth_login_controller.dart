@@ -1,28 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class LoginController extends GetxController {
-  final usernameC = TextEditingController();
-  final passwordC = TextEditingController();
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
+  var rememberMe = false.obs;
 
-  void login() async {
-    final res = await http.post(
-      Uri.parse("http://10.0.2.2:5000/api/auth/login"),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "username": usernameC.text,
-        "password": passwordC.text,
-      }),
-    );
+  void login() {
+    Get.toNamed('/home');
+  }
 
-    final data = jsonDecode(res.body);
-    if (res.statusCode == 200) {
-      Get.snackbar("Berhasil", "Selamat datang ${data['username']}");
-      // Simpan token dan api key kalau perlu
-    } else {
-      Get.snackbar("Gagal", data["msg"]);
-    }
+  void toggleRememberMe(bool? value) {
+    rememberMe.value = value ?? false;
+  }
+
+  @override
+  void onClose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.onClose();
   }
 }
