@@ -49,7 +49,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.FOLDER,
-      page: () => const FolderView(),
+      page: () => FolderView(),
       binding: FolderBinding(),
     ),
   ];
