@@ -9,6 +9,10 @@ abstract class Routes {
   static const AUTH_REGISTER = _Paths.AUTH_REGISTER;
   static const CALENDAR = _Paths.CALENDAR;
   static const FOLDER = _Paths.FOLDER;
+  static const SETTING = _Paths.SETTING;
+  static const NOTE_DETAIL = _Paths.NOTE_DETAIL;
+  static const USER_PROFILE = _Paths.USER_PROFILE;
+  static const APP_SETTINGS = _Paths.APP_SETTINGS;
 }
 
 abstract class _Paths {
@@ -19,4 +23,8 @@ abstract class _Paths {
   static const AUTH_REGISTER = '/register';
   static const CALENDAR = '/calendar';
   static const FOLDER = '/folder';
+  static const SETTING = '/setting';
+  static const NOTE_DETAIL = '/note-detail';
+  static const USER_PROFILE = '/user-profile';
+  static const APP_SETTINGS = '/app-settings';
 }
