@@ -4,6 +4,8 @@ import '../modules/app_settings/bindings/app_settings_binding.dart';
 import '../modules/app_settings/views/app_settings_view.dart';
 import '../modules/auth/login/bindings/auth_login_binding.dart';
 import '../modules/auth/login/views/auth_login_view.dart';
+import '../modules/auth/otp/bindings/auth_otp_binding.dart';
+import '../modules/auth/otp/views/auth_otp_view.dart';
 import '../modules/auth/register/bindings/auth_register_binding.dart';
 import '../modules/auth/register/views/auth_register_view.dart';
 import '../modules/calendar/bindings/calendar_binding.dart';
@@ -29,11 +31,7 @@ class AppPages {
   static const INITIAL = Routes.AUTH_LOGIN;
 
   static final routes = [
-    GetPage(
-      name: _Paths.HOME,
-      page: () => HomeView(),
-      binding: HomeBinding(),
-    ),
+    GetPage(name: _Paths.HOME, page: () => HomeView(), binding: HomeBinding()),
     GetPage(
       name: _Paths.SPLASH,
       page: () => SplashView(),
@@ -78,6 +76,11 @@ class AppPages {
       name: _Paths.APP_SETTINGS,
       page: () => const AppSettingsView(),
       binding: AppSettingsBinding(),
+    ),
+    GetPage(
+      name: _Paths.AUTH_OTP,
+      page: () => OtpView(),
+      binding: AuthOtpBinding(),
     ),
   ];
 }

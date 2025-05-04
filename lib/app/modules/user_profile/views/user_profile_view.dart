@@ -26,7 +26,6 @@ class UserProfileView extends GetView<UserProfileController> {
             const CircleAvatar(radius: 40, child: Icon(Icons.person, size: 40)),
             const SizedBox(height: 16),
             TextField(
-              // controller: controller.usernameController,
               decoration: const InputDecoration(
                 labelText: 'Username',
                 border: OutlineInputBorder(),

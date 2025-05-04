@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/folder_controller.dart';
 import '../../../widgets/bottom_nav_bar.dart';
-import 'package:lucide_icons/lucide_icons.dart'; // Optional
+import 'package:lucide_icons/lucide_icons.dart'; 
 
 class FolderView extends GetView<FolderController> {
   @override
