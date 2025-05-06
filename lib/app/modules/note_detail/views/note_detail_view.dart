@@ -25,7 +25,7 @@ class NoteDetailView extends GetView<NoteDetailController> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
+        child: Column(  
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(

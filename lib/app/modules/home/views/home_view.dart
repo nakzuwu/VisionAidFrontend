@@ -49,21 +49,8 @@ class HomeView extends GetView<HomeController> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 image: const DecorationImage(
-                  image: AssetImage(
-                    'assets/images/banner.jpg',
-                  ), // Ganti sesuai asetmu
+                  image: AssetImage('assets/quotes.png'), // Ganti sesuai asetmu
                   fit: BoxFit.cover,
-                ),
-              ),
-              child: const Center(
-                child: Text(
-                  'Yes, You can!\nBelieve in Yourself',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
               ),
             ),
