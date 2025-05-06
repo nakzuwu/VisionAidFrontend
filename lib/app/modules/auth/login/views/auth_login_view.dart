@@ -22,7 +22,10 @@ class LoginView extends StatelessWidget {
 
               // Card
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -37,7 +40,13 @@ class LoginView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Login', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Login',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 20),
 
                     const Text('Nama Pengguna'),
@@ -57,33 +66,43 @@ class LoginView extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 12),
-                    Obx(() => Row(
-                          children: [
-                            Checkbox(
-                              value: controller.rememberMe.value,
-                              onChanged: controller.toggleRememberMe,
-                            ),
-                            const Text('Ingat Kata Sandi Saya'),
-                          ],
-                        )),
+                    Obx(
+                      () => Row(
+                        children: [
+                          Checkbox(
+                            value: controller.rememberMe.value,
+                            onChanged: controller.toggleRememberMe,
+                          ),
+                          const Text('Ingat Kata Sandi Saya'),
+                        ],
+                      ),
+                    ),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
                           onPressed: () {},
-                          child: const Text('Bantuan', style: TextStyle(color: Colors.lightBlue)),
+                          child: const Text(
+                            'Lupa Sandi',
+                            style: TextStyle(color: Colors.lightBlue),
+                          ),
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFF9D93D),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             elevation: 0,
                           ),
                           onPressed: controller.login,
                           child: const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Text('Login', style: TextStyle(color: Colors.black)),
+                            child: Text(
+                              'Login',
+                              style: TextStyle(color: Colors.black),
+                            ),
                           ),
                         ),
                       ],
@@ -99,7 +118,10 @@ class LoginView extends StatelessWidget {
                   const Text('Belum punya akun? '),
                   GestureDetector(
                     onTap: () => Get.toNamed('/register'),
-                    child: const Text('register', style: TextStyle(color: Colors.lightBlue)),
+                    child: const Text(
+                      'register',
+                      style: TextStyle(color: Colors.lightBlue),
+                    ),
                   ),
                 ],
               ),
