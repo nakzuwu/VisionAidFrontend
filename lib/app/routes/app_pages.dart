@@ -14,6 +14,8 @@ import '../modules/folder/bindings/folder_binding.dart';
 import '../modules/folder/views/folder_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
+import '../modules/media/bindings/media_binding.dart';
+import '../modules/media/views/media_view.dart';
 import '../modules/note_detail/bindings/note_detail_binding.dart';
 import '../modules/note_detail/views/note_detail_view.dart';
 import '../modules/setting/bindings/setting_binding.dart';
@@ -81,6 +83,11 @@ class AppPages {
       name: _Paths.AUTH_OTP,
       page: () => OtpView(),
       binding: AuthOtpBinding(),
+    ),
+    GetPage(
+      name: _Paths.MEDIA,
+      page: () => MediaView(),
+      binding: MediaBinding(),
     ),
   ];
 }

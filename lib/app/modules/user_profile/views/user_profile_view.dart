@@ -19,6 +19,7 @@ class UserProfileView extends GetView<UserProfileController> {
         onPressed: () {},
         child: const Icon(Icons.add),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

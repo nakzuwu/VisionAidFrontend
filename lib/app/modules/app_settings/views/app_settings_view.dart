@@ -19,6 +19,7 @@ class AppSettingsView extends GetView<AppSettingsController> {
         onPressed: () {},
         child: const Icon(Icons.add),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

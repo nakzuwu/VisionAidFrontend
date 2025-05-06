@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vision_aid_app/app/routes/app_pages.dart';
 import '../controllers/note_detail_controller.dart';
 
 class NoteDetailView extends GetView<NoteDetailController> {
@@ -38,19 +39,19 @@ class NoteDetailView extends GetView<NoteDetailController> {
             const Divider(thickness: 1),
             const SizedBox(height: 8),
             TextField(
-                // controller: controller.titleController,
-                decoration: const InputDecoration(
-                  hintText: "Catatan",
-                  border: InputBorder.none,
-                ),
-                style: const TextStyle(fontSize: 16, color: Colors.grey),
+              // controller: controller.titleController,
+              decoration: const InputDecoration(
+                hintText: "Catatan",
+                border: InputBorder.none,
               ),
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
             // Kamu bisa ganti dengan TextField nanti
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => Get.toNamed(Routes.MEDIA),
         backgroundColor: Colors.yellow[700],
         child: const Icon(Icons.camera_alt, color: Colors.white),
       ),

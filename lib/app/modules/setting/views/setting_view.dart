@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vision_aid_app/app/routes/app_pages.dart';
 import '../../../widgets/bottom_nav_bar.dart';
 import '../controllers/setting_controller.dart';
 
@@ -24,33 +25,36 @@ class SettingView extends GetView<SettingController> {
             children: [
               const Icon(Icons.account_circle, size: 64),
               const SizedBox(height: 10),
-              Obx(() => Text.rich(
+              const Text.rich(
+                TextSpan(
+                  text: 'Halo ',
+                  style: TextStyle(fontSize: 22),
+                  children: [
                     TextSpan(
-                      text: 'Halo ',
-                      style: const TextStyle(fontSize: 22),
-                      children: [
-                        TextSpan(
-                          // text: controller.username.value + '!',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                      text: 'name!', // static text sementara
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  )),
+                  ],
+                ),
+              ),
               const SizedBox(height: 40),
               const Divider(thickness: 1),
               ListTile(
-                title: const Text("edit profile", style: TextStyle(fontSize: 16)),
-                // onTap: controller.onEditProfile,
+                title: const Text(
+                  "edit profile",
+                  style: TextStyle(fontSize: 16),
+                ),
+                onTap: () => Get.toNamed(Routes.USER_PROFILE),
               ),
               const Divider(thickness: 1),
               ListTile(
                 title: const Text("Pengaturan", style: TextStyle(fontSize: 16)),
-                // onTap: controller.onSettings,
+                onTap: () => Get.toNamed(Routes.APP_SETTINGS),
               ),
               const Divider(thickness: 1),
               ListTile(
                 title: const Text("logout", style: TextStyle(fontSize: 16)),
-                // onTap: controller.onLogout,
+                onTap: () => Get.toNamed(Routes.AUTH_LOGIN),
               ),
               const Divider(thickness: 1),
             ],

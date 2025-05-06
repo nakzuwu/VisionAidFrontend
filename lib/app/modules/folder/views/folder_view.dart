@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/folder_controller.dart';
 import '../../../widgets/bottom_nav_bar.dart';
-import 'package:lucide_icons/lucide_icons.dart'; 
+import 'package:lucide_icons/lucide_icons.dart';
 
 class FolderView extends GetView<FolderController> {
   @override
@@ -11,10 +11,11 @@ class FolderView extends GetView<FolderController> {
       backgroundColor: Colors.white,
       bottomNavigationBar: BottomNavBar(currentIndex: 2),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.yellow[700],
         onPressed: () {},
         child: const Icon(Icons.add),
-        backgroundColor: Colors.yellow[700],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

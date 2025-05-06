@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vision_aid_app/app/routes/app_pages.dart';
 import '../controllers/home_controller.dart';
 import '../../../widgets/bottom_nav_bar.dart';
 
@@ -13,7 +14,7 @@ class HomeView extends GetView<HomeController> {
       bottomNavigationBar: BottomNavBar(currentIndex: 0),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.yellow[700],
-        onPressed: () {},
+        onPressed: () => Get.toNamed(Routes.NOTE_DETAIL),
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

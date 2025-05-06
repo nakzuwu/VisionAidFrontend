@@ -33,7 +33,6 @@ class BottomNavBar extends StatelessWidget {
                 ),
               ),
             ),
-
             // Calendar
             IconButton(
               icon: Icon(
@@ -44,7 +43,7 @@ class BottomNavBar extends StatelessWidget {
               onPressed: () => Get.toNamed(Routes.CALENDAR),
               color: Colors.grey,
             ),
-            const SizedBox(width: 48), // FAB space (untuk tombol + di luar navbar)
+            const SizedBox(width: 48),
             // Folder
             IconButton(
               icon: Icon(
@@ -62,7 +61,7 @@ class BottomNavBar extends StatelessWidget {
                 size: currentIndex == 3 ? 30 : 26,
                 weight: currentIndex == 3 ? 800 : 400,
               ),
-              onPressed: () {}, // kasih aksi nanti ya bestie
+              onPressed: () => Get.toNamed(Routes.SETTING),
               color: Colors.grey,
             ),
           ],
