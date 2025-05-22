@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../data/services/auth_service.dart';
 
 class RegisterController extends GetxController {
   final usernameC = TextEditingController();
@@ -8,25 +9,40 @@ class RegisterController extends GetxController {
   final confirmPasswordC = TextEditingController();
 
   RxBool agreeTerms = false.obs;
+  RxBool isLoading = false.obs;
 
   void toggleAgreeTerms(bool? value) {
     agreeTerms.value = value ?? false;
   }
 
-  void register() {
+  Future<void> register() async {
     if (!agreeTerms.value) {
-      Get.snackbar("Error", "You must agree to the terms and conditions");
+      Get.snackbar("Error", "Anda harus menyetujui syarat dan ketentuan");
       return;
     }
 
-    // Tambahkan validasi lainnya sesuai kebutuhan
     if (passwordC.text != confirmPasswordC.text) {
-      Get.snackbar("Error", "Passwords do not match");
+      Get.snackbar("Error", "Password tidak cocok");
       return;
     }
 
-    // Simulasi register sukses
-    Get.toNamed('/home');
+    isLoading.value = true;
+
+    try {
+      final response = await AuthService.register(
+        username: usernameC.text.trim(),
+        email: emailC.text.trim(),
+        password: passwordC.text,
+        confirm: confirmPasswordC.text,
+      );
+
+      Get.snackbar("Berhasil", response['msg'] ?? "Registrasi berhasil");
+      Get.toNamed('/otp', arguments: {'email': emailC.text.trim()});
+    } catch (e) {
+      Get.snackbar("Gagal", e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   @override

@@ -52,7 +52,7 @@ class LoginView extends StatelessWidget {
                     const Text('Nama Pengguna'),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: controller.usernameController,
+                      controller: controller.usernameC,
                       decoration: _inputDecoration(),
                     ),
                     const SizedBox(height: 16),
@@ -60,7 +60,7 @@ class LoginView extends StatelessWidget {
                     const Text('Kata Sandi'),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: controller.passwordController,
+                      controller: controller.passwordC,
                       obscureText: true,
                       decoration: _inputDecoration(),
                     ),

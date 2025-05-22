@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/auth_otp_controller.dart'; // pastikan path sesuai
+import '../controllers/auth_otp_controller.dart';
 
 class OtpView extends StatelessWidget {
   final controller = Get.put(OtpController());
@@ -51,7 +51,7 @@ class OtpView extends StatelessWidget {
                     const Text('Masukkan Kode OTP'),
                     const SizedBox(height: 6),
                     TextField(
-                      controller: controller.otpController,
+                      controller: controller.otpC,
                       keyboardType: TextInputType.number,
                       decoration: _inputDecoration(),
                     ),
