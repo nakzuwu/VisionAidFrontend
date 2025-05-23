@@ -2,12 +2,16 @@ import 'package:get/get.dart';
 
 import '../modules/app_settings/bindings/app_settings_binding.dart';
 import '../modules/app_settings/views/app_settings_view.dart';
+import '../modules/auth/forgot_password/bindings/auth_forgot_password_binding.dart';
+import '../modules/auth/forgot_password/views/auth_forgot_password_view.dart';
 import '../modules/auth/login/bindings/auth_login_binding.dart';
 import '../modules/auth/login/views/auth_login_view.dart';
 import '../modules/auth/otp/bindings/auth_otp_binding.dart';
 import '../modules/auth/otp/views/auth_otp_view.dart';
 import '../modules/auth/register/bindings/auth_register_binding.dart';
 import '../modules/auth/register/views/auth_register_view.dart';
+import '../modules/auth/reset_password/bindings/auth_reset_password_binding.dart';
+import '../modules/auth/reset_password/views/auth_reset_password_view.dart';
 import '../modules/calendar/bindings/calendar_binding.dart';
 import '../modules/calendar/views/calendar_view.dart';
 import '../modules/folder/bindings/folder_binding.dart';
@@ -88,6 +92,16 @@ class AppPages {
       name: _Paths.MEDIA,
       page: () => MediaView(),
       binding: MediaBinding(),
+    ),
+    GetPage(
+      name: _Paths.AUTH_FORGOT_PASSWORD,
+      page: () => AuthForgotPasswordView(),
+      binding: AuthForgotPasswordBinding(),
+    ),
+    GetPage(
+      name: _Paths.AUTH_RESET_PASSWORD,
+      page: () => AuthResetPasswordView(),
+      binding: AuthResetPasswordBinding(),
     ),
   ];
 }

@@ -77,7 +77,13 @@ class LoginView extends StatelessWidget {
                         ],
                       ),
                     ),
-
+                    TextButton(
+                      onPressed: () => Get.toNamed('/forgot-password'),
+                      child: const Text(
+                        'Lupa Sandi',
+                        style: TextStyle(color: Colors.lightBlue),
+                      ),
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
