@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vision_aid_app/app/data/services/auth_service.dart';
 import '../controllers/auth_login_controller.dart'; // sesuaikan path-nya
 
 class LoginView extends StatelessWidget {
@@ -77,18 +78,11 @@ class LoginView extends StatelessWidget {
                         ],
                       ),
                     ),
-                    TextButton(
-                      onPressed: () => Get.toNamed('/forgot-password'),
-                      child: const Text(
-                        'Lupa Sandi',
-                        style: TextStyle(color: Colors.lightBlue),
-                      ),
-                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () => Get.toNamed('/forgot-password'),
                           child: const Text(
                             'Lupa Sandi',
                             style: TextStyle(color: Colors.lightBlue),
@@ -114,6 +108,33 @@ class LoginView extends StatelessWidget {
                       ],
                     ),
                   ],
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final result =
+                      await Get.find<AuthService>().loginWithGoogle();
+                  if (result['success']) {
+                    Get.snackbar("Berhasil", "Login Google berhasil");
+                  } else {
+                    Get.snackbar(
+                      "Gagal",
+                      result['message'] ?? 'Terjadi kesalahan',
+                    );
+                  }
+                },
+                icon: Image.asset(
+                  'assets/google_icon.png',
+                  height: 24,
+                ), // pastikan ikon tersedia
+                label: const Text('Login dengan Google'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.grey),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
 

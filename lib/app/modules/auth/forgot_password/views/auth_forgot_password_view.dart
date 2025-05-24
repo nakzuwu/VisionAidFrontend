@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vision_aid_app/app/modules/auth/forgot_password/controllers/auth_forgot_password_controller.dart';
-import '../controllers/auth_forgot_password_controller.dart';
 
 class AuthForgotPasswordView extends StatelessWidget {
   final controller = Get.put(AuthForgotPasswordController());

@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:vision_aid_app/app/routes/app_pages.dart';
 
 class SplashView extends StatelessWidget {
+  const SplashView({super.key});
+
   @override
   Widget build(BuildContext context) {
     Future.delayed(Duration(seconds: 2), () {

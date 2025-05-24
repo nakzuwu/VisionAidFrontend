@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import '../controllers/media_controller.dart';
 
 class MediaView extends GetView<MediaController> {
+  const MediaView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

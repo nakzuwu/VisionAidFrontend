@@ -5,6 +5,8 @@ import '../../../widgets/bottom_nav_bar.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class FolderView extends GetView<FolderController> {
+  const FolderView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,7 +93,7 @@ class FolderView extends GetView<FolderController> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  "${note.date}",
+                                  note.date,
                                   style: TextStyle(color: Colors.grey[600]),
                                 ),
                                 const SizedBox(height: 4),

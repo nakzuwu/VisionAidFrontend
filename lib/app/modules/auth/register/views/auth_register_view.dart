@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vision_aid_app/app/data/services/auth_service.dart';
 import 'package:vision_aid_app/app/routes/app_pages.dart';
 import '../controllers/auth_register_controller.dart';
 
@@ -101,13 +102,40 @@ class RegisterView extends StatelessWidget {
                   ],
                 ),
               ),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final result =
+                      await Get.find<AuthService>().loginWithGoogle();
+                  if (result['success']) {
+                    Get.snackbar("Berhasil", "Login Google berhasil");
+                  } else {
+                    Get.snackbar(
+                      "Gagal",
+                      result['message'] ?? 'Terjadi kesalahan',
+                    );
+                  }
+                },
+                icon: Image.asset(
+                  'assets/google_icon.png',
+                  height: 24,
+                ), // pastikan ikon tersedia
+                label: const Text('Login dengan Google'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.grey),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text("Sudah punya akun? "),
                   GestureDetector(
-                    onTap: () => Get.toNamed(Routes.AUTH_OTP),
+                    onTap: () => Get.toNamed(Routes.AUTH_LOGIN),
                     child: const Text(
                       "Login",
                       style: TextStyle(color: Colors.lightBlue),

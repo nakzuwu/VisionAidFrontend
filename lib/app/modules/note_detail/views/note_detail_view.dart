@@ -4,7 +4,7 @@ import 'package:vision_aid_app/app/routes/app_pages.dart';
 import '../controllers/note_detail_controller.dart';
 
 class NoteDetailView extends GetView<NoteDetailController> {
-  const NoteDetailView({Key? key}) : super(key: key);
+  const NoteDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {

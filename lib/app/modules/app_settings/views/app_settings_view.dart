@@ -4,7 +4,7 @@ import 'package:vision_aid_app/app/widgets/bottom_nav_bar.dart';
 import '../controllers/app_settings_controller.dart';
 
 class AppSettingsView extends GetView<AppSettingsController> {
-  const AppSettingsView({Key? key}) : super(key: key);
+  const AppSettingsView({super.key});
 
   @override
   Widget build(BuildContext context) {

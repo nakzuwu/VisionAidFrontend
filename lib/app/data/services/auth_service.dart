@@ -1,8 +1,11 @@
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AuthService {
   static const String baseUrl = 'http://localhost:5000/api/auth';
+  
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
 
   static Future<Map<String, dynamic>> register({
     required String username,
@@ -101,7 +104,7 @@ class AuthService {
     required String confirmPassword,
   }) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/api/auth/reset-password'),
+      Uri.parse('$baseUrl/reset-password'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'token': token,
@@ -114,6 +117,35 @@ class AuthService {
       return jsonDecode(response.body);
     } else {
       throw Exception(jsonDecode(response.body)['msg'] ?? 'Terjadi kesalahan');
+    }
+  }
+
+  Future<Map<String, dynamic>> loginWithGoogle() async {
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return {'success': false, 'message': 'Login dibatalkan pengguna'};
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/oauth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'id_token': idToken}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'token': data['token'],
+          'user': data['user'],
+        };
+      } else {
+        return {'success': false, 'message': data['msg']};
+      }
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
     }
   }
 }
