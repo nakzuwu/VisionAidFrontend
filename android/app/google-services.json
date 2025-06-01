@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "382835040516",
+    "project_id": "visionaid-cb1a3",
+    "storage_bucket": "visionaid-cb1a3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:382835040516:android:8ee657a0712d36cd457051",
+        "android_client_info": {
+          "package_name": "com.capstone.visionaid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTlgu3mKc7l4ZDlvSO6R_fgjV2G_x9qV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:382835040516:android:e4c8d43b87c38a9a457051",
+        "android_client_info": {
+          "package_name": "com.visionaid.app.vision_aid_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTlgu3mKc7l4ZDlvSO6R_fgjV2G_x9qV8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

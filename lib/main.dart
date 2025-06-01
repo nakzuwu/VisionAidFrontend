@@ -1,10 +1,21 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'app/routes/app_pages.dart';
-import 'package:uni_links/uni_links.dart';
+import 'package:flutter/foundation.dart'; 
+import 'firebase_options.dart'; 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.web,
+    );
+  } else {
+    await Firebase.initializeApp(); // untuk Android/iOS
+  }
+
   runApp(
     GetMaterialApp(
       title: "Application",
@@ -13,17 +24,18 @@ void main() {
     ),
   );
 }
-void initDeepLinkListener() async {
-  try {
-    uriLinkStream.listen((Uri? uri) {
-      if (uri != null && uri.path == '/reset-password') {
-        final token = uri.queryParameters['token'];
-        if (token != null) {
-          Get.toNamed('/reset-password', arguments: token);
-        }
-      }
-    });
-  } on PlatformException {
-    print('Gagal inisialisasi deep link');
-  }
-}
+
+// void initDeepLinkListener() async {
+//   try {
+//     uriLinkStream.listen((Uri? uri) {
+//       if (uri != null && uri.path == '/reset-password') {
+//         final token = uri.queryParameters['token'];
+//         if (token != null) {
+//           Get.toNamed('/reset-password', arguments: token);
+//         }
+//       }
+//     });
+//   } on PlatformException {
+//     print('Gagal inisialisasi deep link');
+//   }
+// }

@@ -1,11 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AuthService {
   static const String baseUrl = 'http://localhost:5000/api/auth';
-  
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   static Future<Map<String, dynamic>> register({
     required String username,
@@ -122,12 +124,27 @@ class AuthService {
 
   Future<Map<String, dynamic>> loginWithGoogle() async {
     try {
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return {'success': false, 'message': 'Login dibatalkan pengguna'};
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        return {'success': false, 'message': 'Login dibatalkan pengguna'};
+      }
 
-      final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Login ke Firebase
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
+      final idToken = await userCredential.user?.getIdToken();
+
+      // Kirim ke backend Flask
       final response = await http.post(
         Uri.parse('$baseUrl/oauth/login'),
         headers: {'Content-Type': 'application/json'},
@@ -136,11 +153,7 @@ class AuthService {
 
       final data = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'token': data['token'],
-          'user': data['user'],
-        };
+        return {'success': true, 'token': data['token'], 'user': data['user']};
       } else {
         return {'success': false, 'message': data['msg']};
       }

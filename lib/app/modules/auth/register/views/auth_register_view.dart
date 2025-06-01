@@ -54,12 +54,12 @@ class RegisterView extends StatelessWidget {
                     _buildTextField(
                       label: "Password",
                       controller: controller.passwordC,
-                      obscureText: false,
+                      obscureText: true,
                     ),
                     _buildTextField(
                       label: "Confirm Password",
                       controller: controller.confirmPasswordC,
-                      obscureText: false,
+                      obscureText: true,
                     ),
                     const SizedBox(height: 8),
                     Obx(
