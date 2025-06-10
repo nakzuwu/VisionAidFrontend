@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AuthService {
-  static const String baseUrl = 'http://localhost:5000/api/auth';
+  static const String baseUrl = 'https://visionaid.lolihunter.my.id/api/auth';
 
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseAuth _auth = FirebaseAuth.instance;

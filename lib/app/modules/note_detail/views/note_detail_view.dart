@@ -1,7 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:vision_aid_app/app/routes/app_pages.dart';
-import '../controllers/note_detail_controller.dart';
+import 'package:vision_aid_app/app/modules/note_detail/controllers/note_detail_controller.dart';
 
 class NoteDetailView extends GetView<NoteDetailController> {
   const NoteDetailView({super.key});
@@ -10,67 +11,52 @@ class NoteDetailView extends GetView<NoteDetailController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Get.back(),
-        ),
+        title: const Text('Notepad'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share, color: Colors.black),
+            icon: const Icon(Icons.save),
             onPressed: () {},
           ),
         ],
-        elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(  
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(16.0),
+        child: Obx(() => Column(
           children: [
-            TextField(
-              // controller: controller.titleController,
-              decoration: const InputDecoration(
-                hintText: "Judul Catatan",
-                border: InputBorder.none,
+            Expanded(
+              child: TextField(
+                controller: controller.textController,
+                maxLines: null,
+                expands: true,
+                keyboardType: TextInputType.multiline,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Ketik catatan Anda di sini...',
+                ),
+                style: TextStyle(
+                  fontWeight: controller.isBold.value ? FontWeight.bold : FontWeight.normal,
+                  fontStyle: controller.isItalic.value ? FontStyle.italic : FontStyle.normal,
+                  decoration: controller.isUnderline.value ? TextDecoration.underline : TextDecoration.none,
+                  backgroundColor: controller.isHighlighted.value ? Colors.yellow : Colors.transparent,
+                ),
               ),
-              style: const TextStyle(fontSize: 20, color: Colors.grey),
             ),
-            const Divider(thickness: 1),
-            const SizedBox(height: 8),
-            TextField(
-              // controller: controller.titleController,
-              decoration: const InputDecoration(
-                hintText: "Catatan",
-                border: InputBorder.none,
-              ),
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            // Kamu bisa ganti dengan TextField nanti
+            // Tampilkan gambar yang sudah dipilih
+            ...controller.images.map((imagePath) {
+              return Image.file(File(imagePath));
+            }).toList(),
           ],
-        ),
+        )),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Get.toNamed(Routes.MEDIA),
-        backgroundColor: Colors.yellow[700],
-        child: const Icon(Icons.camera_alt, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              IconButton(icon: Icon(Icons.edit), onPressed: null),
-              IconButton(icon: Icon(Icons.text_fields), onPressed: null),
-              SizedBox(width: 40), // for FAB
-              IconButton(icon: Icon(Icons.image), onPressed: null),
-              IconButton(icon: Icon(Icons.check_box_outlined), onPressed: null),
-            ],
-          ),
+      bottomNavigationBar: Obx(
+        () => BottomNavigationBar(
+          currentIndex: controller.currentIndex.value,
+          onTap: controller.changeTab,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: const Color(0xFFFFEB3B),
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.black54,
+          items: controller.bottomNavItems,
         ),
       ),
     );

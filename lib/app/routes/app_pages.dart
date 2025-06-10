@@ -70,7 +70,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.NOTE_DETAIL,
-      page: () => const NoteDetailView(),
+      page: () => NoteDetailView(),
       binding: NoteDetailBinding(),
     ),
     GetPage(
