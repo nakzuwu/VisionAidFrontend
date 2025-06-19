@@ -1,59 +1,29 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
 class FolderController extends GetxController {
-  var folders = <FolderModel>[
-    FolderModel(
-      title: 'Matematika',
-      isExpanded: false,
-      notes: [
-        NoteModel(
-          title: 'Aljabar',
-          time: '13:00',
-          date: '3/5/2025',
-          content: 'Lorem ipsum dolor sit amet...',
-        ),
-      ],
-    ),
-    FolderModel(
-      title: 'Bahasa Inggris',
-      isExpanded: false,
-      notes: [
-        NoteModel(
-          title: 'Tenses',
-          time: '10:00',
-          date: '1/4/2025',
-          content: 'Simple present tense adalah...',
-        ),
-      ],
-    ),
-    FolderModel(
-      title: 'Bahasa Jepang',
-      isExpanded: false,
-      notes: [
-        NoteModel(
-          title: 'Hiragana',
-          time: '09:00',
-          date: '2/4/2025',
-          content: 'あ、い、う、え、お...',
-        ),
-      ],
-    ),
-  ].obs;
-}
+  final storage = GetStorage();
+  var folders = <String, List<String>>{}.obs;
 
-class FolderModel {
-  String title;
-  bool isExpanded;
-  List<NoteModel> notes;
+  @override
+  void onInit() {
+    super.onInit();
+    final saved = storage.read('folders') ?? {};
+    folders.value = Map<String, List<String>>.from(saved.map(
+      (key, value) => MapEntry(key, List<String>.from(value)),
+    ));
+  }
 
-  FolderModel({required this.title, required this.isExpanded, required this.notes});
-}
+  void addFolder(String name) {
+    if (name.trim().isEmpty || folders.containsKey(name)) return;
+    folders[name] = [];
+    storage.write('folders', folders);
+  }
 
-class NoteModel {
-  String title;
-  String time;
-  String date;
-  String content;
-
-  NoteModel({required this.title, required this.time, required this.date, required this.content});
+  void refreshFolders() {
+    final saved = storage.read('folders') ?? {};
+    folders.value = Map<String, List<String>>.from(saved.map(
+      (key, value) => MapEntry(key, List<String>.from(value)),
+    ));
+  }
 }

@@ -55,7 +55,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.CALENDAR,
-      page: () => const CalendarView(),
+      page: () =>  CalendarView(),
       binding: CalendarBinding(),
     ),
     GetPage(

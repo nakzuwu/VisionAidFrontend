@@ -1,39 +1,74 @@
 import 'package:get/get.dart';
-import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 
 class CalendarController extends GetxController {
-  Rx<DateTime> selectedDay = DateTime.now().obs;
-  Rx<DateTime> focusedDay = DateTime.now().obs;
+  final selectedDay = DateTime.now().obs;
+  final focusedDay = DateTime.now().obs;
+  final selectedEvents = <Map<String, dynamic>>[].obs;
+  final events = <DateTime, List<Map<String, dynamic>>>{}.obs;
 
-  final RxList<Map<String, dynamic>> selectedEvents = <Map<String, dynamic>>[].obs;
-
-  final List<Map<String, dynamic>> allEvents = [
-    {
-      'date': DateTime(2021, 2, 17),
-      'title': 'Ulangan Matematika',
-      'color': Colors.blue,
-    },
-    {
-      'date': DateTime(2021, 2, 24),
-      'title': 'Tes Toefl Bahasa Inggris',
-      'color': Colors.green,
-    },
-  ];
+  void onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    this.selectedDay.value = selectedDay;
+    this.focusedDay.value = focusedDay;
+    _updateSelectedEvents(selectedDay);
+  }
 
   List<Map<String, dynamic>> getEventsForDay(DateTime day) {
-    return allEvents.where((event) => isSameDay(event['date'], day)).toList();
+    return events[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
-  void onDaySelected(DateTime selected, DateTime focused) {
-    selectedDay.value = selected;
-    focusedDay.value = focused;
-    selectedEvents.value = getEventsForDay(selected);
+  void addEvent(Map<String, dynamic> event) {
+    final day = event['day'] as DateTime;
+    final dayKey = DateTime(day.year, day.month, day.day);
+
+    events[dayKey] ??= [];
+    events[dayKey]!.add(event);
+    _updateSelectedEvents(selectedDay.value);
   }
 
-  @override
-  void onInit() {
-    selectedEvents.value = getEventsForDay(selectedDay.value);
-    super.onInit();
+  void updateEvent(String id, Map<String, dynamic> updatedEvent) {
+    // Find and remove the old event
+    deleteEvent(id);
+    
+    // Add the updated event
+    addEvent(updatedEvent);
+  }
+
+  void deleteEvent(String id) {
+    events.forEach((key, value) {
+      value.removeWhere((event) => event['id'] == id);
+    });
+    _updateSelectedEvents(selectedDay.value);
+  }
+
+  void _updateSelectedEvents(DateTime day) {
+    selectedEvents.value = getEventsForDay(day);
+  }
+  
+  List<Map<String, dynamic>> get upcomingReminders {
+    final now = DateTime.now();
+    final endTime = now.add(const Duration(days: 1));
+    
+    // Flatten all events
+    final allEvents = <Map<String, dynamic>>[];
+    events.values.forEach(allEvents.addAll);
+    
+    return allEvents.where((event) {
+      final eventDate = event['day'] as DateTime?;
+      if (eventDate == null) return false;
+      
+      // Compare without time
+      final eventDay = DateTime(eventDate.year, eventDate.month, eventDate.day);
+      final today = DateTime(now.year, now.month, now.day);
+      final tomorrow = today.add(const Duration(days: 1));
+      
+      // Return true if event is today or tomorrow
+      return eventDay.isAtSameMomentAs(today) || 
+             eventDay.isAtSameMomentAs(tomorrow);
+    }).toList()
+      ..sort((a, b) {
+        final aDate = a['day'] as DateTime;
+        final bDate = b['day'] as DateTime;
+        return aDate.compareTo(bDate);
+      });
   }
 }
