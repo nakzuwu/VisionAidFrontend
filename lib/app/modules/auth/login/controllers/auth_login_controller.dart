@@ -24,7 +24,6 @@ class LoginController extends GetxController {
       final token = result['token'];
       final user = result['user'];
 
-      // Simpan token dan user info ke local storage
       box.write('token', token);
       box.write('username', user['username']);
       box.write('email', user['email']);

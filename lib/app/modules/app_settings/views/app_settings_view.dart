@@ -23,12 +23,6 @@ class AppSettingsView extends GetView<AppSettingsController> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          SwitchListTile(
-            title: const Text('Mode Gelap'),
-            value: controller.isDarkMode.value,
-            onChanged: controller.toggleDarkMode,
-          ),
-          const Divider(),
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('Tentang Aplikasi'),

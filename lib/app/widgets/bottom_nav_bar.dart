@@ -7,62 +7,61 @@ class BottomNavBar extends StatelessWidget {
 
   const BottomNavBar({super.key, required this.currentIndex});
 
+  Widget buildNavItem({
+    required IconData icon,
+    required int index,
+    required VoidCallback onTap,
+  }) {
+    final isActive = currentIndex == index;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isActive ? Colors.yellow[700] : Colors.transparent,
+        ),
+        child: Icon(
+          icon,
+          size: 26,
+          color: isActive ? Colors.white : Colors.grey[700],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
       notchMargin: 8,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: SizedBox(
+        height: 60, // memberi ruang vertikal yang cukup
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Custom HOME Button
-            GestureDetector(
+            buildNavItem(
+              icon: Icons.home,
+              index: 0,
               onTap: () => Get.toNamed(Routes.HOME),
-              child: Transform.translate(
-                offset: const Offset(0, -12),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.yellow[700],
-                    border: Border.all(color: Colors.white, width: 4),
-                  ),
-                  child: const Icon(Icons.home, color: Colors.white, size: 28),
-                ),
-              ),
             ),
-            // Calendar
-            IconButton(
-              icon: Icon(
-                Icons.calendar_today,
-                size: currentIndex == 1 ? 30 : 26,
-                weight: currentIndex == 1 ? 800 : 400,
-              ),
-              onPressed: () => Get.toNamed(Routes.CALENDAR),
-              color: Colors.grey,
+            buildNavItem(
+              icon: Icons.calendar_today,
+              index: 1,
+              onTap: () => Get.toNamed(Routes.CALENDAR),
             ),
-            const SizedBox(width: 48),
-            // Folder
-            IconButton(
-              icon: Icon(
-                Icons.folder,
-                size: currentIndex == 2 ? 30 : 26,
-                weight: currentIndex == 2 ? 800 : 400,
-              ),
-              onPressed: () => Get.toNamed(Routes.FOLDER),
-              color: Colors.grey,
+            const SizedBox(width: 48), // ruang untuk FAB di tengah
+            buildNavItem(
+              icon: Icons.folder,
+              index: 2,
+              onTap: () => Get.toNamed(Routes.FOLDER),
             ),
-            // Settings
-            IconButton(
-              icon: Icon(
-                Icons.settings,
-                size: currentIndex == 3 ? 30 : 26,
-                weight: currentIndex == 3 ? 800 : 400,
-              ),
-              onPressed: () => Get.toNamed(Routes.SETTING),
-              color: Colors.grey,
+            buildNavItem(
+              icon: Icons.settings,
+              index: 3,
+              onTap: () => Get.toNamed(Routes.SETTING),
             ),
           ],
         ),

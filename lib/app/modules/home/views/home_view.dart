@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:vision_aid_app/app/data/model/note_model.dart';
 import 'package:vision_aid_app/app/modules/note_detail/controllers/note_detail_controller.dart';
 import 'package:vision_aid_app/app/routes/app_pages.dart';
@@ -8,15 +9,22 @@ import '../../calendar/controllers/calendar_controller.dart';
 import '../../../widgets/bottom_nav_bar.dart';
 
 class HomeView extends GetView<HomeController> {
-  const HomeView({super.key});
+  HomeView({super.key});
+  final searchController = TextEditingController();
+  final searchQuery = ''.obs;
 
   @override
   Widget build(BuildContext context) {
     // Initialize controllers
-    final CalendarController calendarController = 
-        Get.put(CalendarController(), permanent: true);
-    final NoteDetailController notesController = 
-        Get.put(NoteDetailController(), permanent: true);
+    final CalendarController calendarController = Get.put(
+      CalendarController(),
+      permanent: true,
+    );
+    final NoteDetailController notesController = Get.put(
+      NoteDetailController(),
+      permanent: true,
+    );
+    final username = GetStorage().read('username') ?? 'User';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -36,28 +44,30 @@ class HomeView extends GetView<HomeController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Halo user!',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  Text(
+                    'Halo ${GetStorage().read('username') ?? 'User'}!',
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const Text(
                     'Apa yang kau lakukan hari ini?',
                     style: TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 16),
-                  const TextField(
-                    decoration: InputDecoration(
+                  TextField(
+                    controller: searchController,
+                    onChanged: (val) => searchQuery.value = val.toLowerCase(),
+                    decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.search),
-                      hintText: 'Cari...',
+                      hintText: 'Cari catatan atau reminder...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
                     ),
                   ),
-                  )
                 ],
               ),
             ),
-            
+
             // Banner
             Container(
               height: 150,
@@ -70,7 +80,7 @@ class HomeView extends GetView<HomeController> {
                 ),
               ),
             ),
-            
+
             // Main content area
             Expanded(
               child: ListView(
@@ -82,108 +92,133 @@ class HomeView extends GetView<HomeController> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   const SizedBox(height: 8),
-                  
-                  Obx(() {
-                    final recentNotes = notesController.recentNotes.take(3).toList();
-                    
-                    return recentNotes.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Text('Tidak ada catatan terbaru'),
-                        )
-                      : SizedBox(
-                          height: 120,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: recentNotes.length,
-                            itemBuilder: (_, index) {
-                              final note = recentNotes[index];
-                              return _buildNoteCard(note);
-                            },
-                          ),
-                        );
-                  }),
-                  
+
+                  // Obx(() {
+                  //   final recentNotes = notesController.recentNotes.take(3).toList();
+
+                  //   return recentNotes.isEmpty
+                  //     ? const Padding(
+                  //         padding: EdgeInsets.symmetric(vertical: 8),
+                  //         child: Text('Tidak ada catatan terbaru'),
+                  //       )
+                  //     : SizedBox(
+                  //         height: 120,
+                  //         child: ListView.builder(
+                  //           scrollDirection: Axis.horizontal,
+                  //           itemCount: recentNotes.length,
+                  //           itemBuilder: (_, index) {
+                  //             final note = recentNotes[index];
+                  //             return _buildNoteCard(note);
+                  //           },
+                  //         ),
+                  //       );
+                  // }),
                   const SizedBox(height: 24),
-                  
+
                   // Upcoming Reminders Section
                   const Text(
                     'Yang akan datang',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   const SizedBox(height: 8),
-                  
+
                   Obx(() {
-                    final upcomingReminders = calendarController.upcomingReminders;
-                    
-                    return upcomingReminders.isEmpty
-                      ? const Padding(
+                    final query = searchQuery.value;
+                    final allReminders = calendarController.upcomingReminders;
+
+                    final filteredReminders =
+                        query.isEmpty
+                            ? allReminders
+                            : allReminders.where((reminder) {
+                              final title =
+                                  (reminder['title'] ?? '')
+                                      .toString()
+                                      .toLowerCase();
+                              final desc =
+                                  (reminder['description'] ?? '')
+                                      .toString()
+                                      .toLowerCase();
+                              return title.contains(query) ||
+                                  desc.contains(query);
+                            }).toList();
+
+                    return filteredReminders.isEmpty
+                        ? const Padding(
                           padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Text('Tidak ada pengingat mendatang'),
+                          child: Text('Tidak ada pengingat yang cocok'),
                         )
-                      : Column(
-                          children: upcomingReminders.map((reminder) {
-                            final color = reminder['color'] as Color? ?? Colors.blue;
-                            
-                            return Container(
-                              width: double.infinity,
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: color,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 3),
-                                  )
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(Icons.notifications, color: Colors.white),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          reminder['title'] ?? 'Pengingat',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
+                        : Column(
+                          children:
+                              filteredReminders.map((reminder) {
+                                final color =
+                                    reminder['color'] as Color? ?? Colors.blue;
+
+                                return Container(
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 3),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '${reminder['date']}${reminder['time'] != null ? ' - ${reminder['time']}' : ''}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  if (reminder['description'] != null && reminder['description'].isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Text(
-                                        reminder['description'],
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 13,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.notifications,
+                                            color: Colors.white,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              reminder['title'] ?? 'Pengingat',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        '${reminder['date']}${reminder['time'] != null ? ' - ${reminder['time']}' : ''}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      if (reminder['description'] != null &&
+                                          reminder['description'].isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 8,
+                                          ),
+                                          child: Text(
+                                            reminder['description'],
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 13,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
                         );
                   }),
                 ],
@@ -197,10 +232,7 @@ class HomeView extends GetView<HomeController> {
 
   Widget _buildNoteCard(Note note) {
     return InkWell(
-      onTap: () => Get.toNamed(
-        Routes.NOTE_DETAIL, 
-        arguments: note.id,
-      ),
+      onTap: () => Get.toNamed(Routes.NOTE_DETAIL, arguments: note.id),
       child: Container(
         width: 180,
         margin: const EdgeInsets.only(right: 12),
@@ -213,7 +245,7 @@ class HomeView extends GetView<HomeController> {
               color: Colors.black.withOpacity(0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
-            )
+            ),
           ],
         ),
         child: Column(

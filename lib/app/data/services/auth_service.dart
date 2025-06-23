@@ -1,13 +1,22 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:vision_aid_app/app/routes/app_pages.dart';
 import 'dart:convert';
 
-class AuthService {
+class AuthService extends GetxService {
   static const String baseUrl = 'https://visionaid.lolihunter.my.id/api/auth';
 
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final box = GetStorage();
+
+  Future<AuthService> init() async {
+    await GetStorage.init();
+    return this;
+  }
 
   static Future<Map<String, dynamic>> register({
     required String username,
@@ -75,11 +84,13 @@ class AuthService {
       body: body,
     );
 
+    final data = jsonDecode(response.body);
+
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      await box.write('token', data['token']); // ✅ simpan token
+      return data;
     } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['msg'] ?? 'Login gagal');
+      throw Exception(data['msg'] ?? 'Login gagal');
     }
   }
 
@@ -122,6 +133,30 @@ class AuthService {
     }
   }
 
+  /// ✅ Logout ke API + hapus token lokal
+  Future<void> logoutUser() async {
+    final token = box.read("token");
+    if (token == null) {
+      Get.snackbar("Logout gagal", "Token tidak ditemukan");
+      return;
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/logout'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      await box.remove("token");
+      Get.offAllNamed(Routes.AUTH_LOGIN);
+    } else {
+      Get.snackbar("Logout gagal", "Gagal logout dari server");
+    }
+  }
+
   Future<Map<String, dynamic>> loginWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -137,14 +172,17 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      // Login ke Firebase
       final UserCredential userCredential = await _auth.signInWithCredential(
         credential,
       );
 
       final idToken = await userCredential.user?.getIdToken();
 
-      // Kirim ke backend Flask
+      print("=== Google Login Debug ===");
+      print("ID Token: $idToken");
+      print("URL: $baseUrl/oauth/login");
+      print("===========================");
+
       final response = await http.post(
         Uri.parse('$baseUrl/oauth/login'),
         headers: {'Content-Type': 'application/json'},

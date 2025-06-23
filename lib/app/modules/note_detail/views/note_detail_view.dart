@@ -1,79 +1,152 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vision_aid_app/app/modules/note_detail/controllers/note_detail_controller.dart';
 
-class NoteDetailView extends GetView<NoteDetailController> {
+class NoteDetailView extends StatelessWidget {
   const NoteDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final noteId = Get.arguments as String?;
+    final controller = Get.put(
+      NoteDetailController(noteId: noteId),
+      tag: noteId,
+    );
+    final noteController = Get.find<NoteDetailController>(tag: noteId);
+
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notepad'),
+        title: Obx(
+          () => Text(controller.isLoading.value ? 'Loading...' : 'Notepad'),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: () {controller.saveNoteLocally();
-          },
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Obx(() => Column(
-          children: [
-          // Dropdown untuk memilih folder
-          DropdownButtonFormField<String>(
-            value: controller.selectedFolder.value.isNotEmpty ? controller.selectedFolder.value : null,
-            hint: const Text('Pilih Folder'),
-            onChanged: (value) {
-              if (value != null) {
-                controller.selectedFolder.value = value;
+            icon: const Icon(Icons.summarize),
+            tooltip: 'Ringkas Catatan',
+            onPressed: () async {
+              final fullText = controller.textController.text.trim();
+              if (fullText.isEmpty) {
+                Get.snackbar('Gagal', 'Catatan kosong');
+                return;
               }
-            },
-            items: controller.folderList.map((folderName) {
-              return DropdownMenuItem(
-                value: folderName,
-                child: Text(folderName),
+
+              Get.dialog(
+                const Center(child: CircularProgressIndicator()),
+                barrierDismissible: false,
               );
-            }).toList(),
+
+              final summary = await controller.summarizeText(fullText);
+              Get.back(); // Tutup loading dialog
+
+              if (summary == null) {
+                Get.snackbar('Gagal', 'Gagal merangkum catatan');
+                return;
+              }
+
+              final TextEditingController summaryController =
+                  TextEditingController(text: summary);
+
+              Get.defaultDialog(
+                title: 'Hasil Ringkasan',
+                content: Column(
+                  children: [
+                    TextField(
+                      controller: summaryController,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'Hasil ringkasan...',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        controller.textController.text = summaryController.text;
+                        Get.back(); // Tutup dialog
+                      },
+                      child: const Text('Gunakan Ringkasan'),
+                    ),
+                    TextButton(
+                      onPressed: () => Get.back(),
+                      child: const Text('Batal'),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
-
-          const SizedBox(height: 16),
-
-          // TextField untuk isi catatan
-          Expanded(
-            child: TextField(
-              controller: controller.textController,
-              maxLines: null,
-              expands: true,
-              keyboardType: TextInputType.multiline,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                hintText: 'Ketik catatan Anda di sini...',
-              ),
-              style: TextStyle(
-                fontWeight: controller.isBold.value ? FontWeight.bold : FontWeight.normal,
-                fontStyle: controller.isItalic.value ? FontStyle.italic : FontStyle.normal,
-                decoration: controller.isUnderline.value ? TextDecoration.underline : TextDecoration.none,
-                backgroundColor: controller.isHighlighted.value ? Colors.yellow : Colors.transparent,
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.camera_alt),
+            tooltip: 'Scan Gambar untuk OCR',
+            onPressed: controller.pickImageForOCR,
           ),
-
-          // Tampilkan gambar yang sudah dipilih
-          ...controller.images.map((imagePath) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Image.file(File(imagePath)),
-            );
-          }).toList(),
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: controller.saveNoteLocally,
+          ),
         ],
-
-        )),
       ),
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              DropdownButtonFormField<String>(
+                value:
+                    controller.folderList.contains(
+                          controller.selectedFolder.value,
+                        )
+                        ? controller.selectedFolder.value
+                        : null, // Hindari error jika nilainya tidak cocok
+                onChanged: (value) {
+                  if (value != null) {
+                    controller.selectedFolder.value = value;
+                  }
+                },
+                hint: const Text('Pilih Folder'),
+                items:
+                    controller.folderList.toSet().toList().map((folderName) {
+                      return DropdownMenuItem(
+                        value: folderName,
+                        child: Text(folderName),
+                      );
+                    }).toList(),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: TextField(
+                  controller: controller.textController,
+                  maxLines: null,
+                  expands: true,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintText: 'Ketik catatan Anda di sini...',
+                  ),
+                ),
+              ),
+              ...controller.images.map((imagePath) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Image.file(File(imagePath)),
+                );
+              }).toList(),
+              ...controller.remoteImages.map((imageUrl) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Image.network(imageUrl),
+                );
+              }).toList(),
+            ],
+          ),
+        );
+      }),
       bottomNavigationBar: Obx(
         () => BottomNavigationBar(
           currentIndex: controller.currentIndex.value,

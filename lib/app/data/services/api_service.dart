@@ -1,100 +1,108 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:uuid/uuid.dart';
+import 'package:vision_aid_app/app/data/model/note_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://visionaid.lolihunter.my.id/api'; // ganti sesuai backend kamu
-  static const uuid = Uuid();
+  static const String baseUrl = 'https://visionaid.lolihunter.my.id/';
 
-  // Generate ID baru untuk catatan
-  static String generateNoteId() {
-    return uuid.v4();
+  static Future<Note?> fetchNote(String noteId) async {
+    final response = await http.get(Uri.parse('$baseUrl/api/notes/$noteId'));
+    if (response.statusCode == 200) {
+      return Note.fromJson(json.decode(response.body));
+    }
+    return null;
   }
 
-  // Sinkronisasi (buat / update)
-  static Future<bool> syncNote({
-    required String apiKey,
-    required String noteId,
-    required String title,
-    required String content,
-    required DateTime updatedAt,
-    bool isDraft = false, required String folder,
-  }) async {
-    final url = Uri.parse('$baseUrl/notes'); // ganti sesuai endpoint create/update
+  static Future<bool> syncNote(Note note) async {
+    final endpoint =
+        note.id != null
+            ? '$baseUrl/api/notes/${note.id}'
+            : '$baseUrl/api/notes';
 
-    final body = {
-      "id": noteId,
-      "title": title,
-      "content": content,
-      "updated_at": updatedAt.toIso8601String(),
-      "is_draft": isDraft ? 1 : 0,
-    };
+    final response = await http.post(
+      Uri.parse(endpoint),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(note.toJson()),
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  static Future<String?> uploadImage(String noteId, String imagePath) async {
+    final file = File(imagePath);
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/api/notes/$noteId/images'),
+    );
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        file.path,
+        filename: imagePath.split('/').last,
+      ),
+    );
+
+    final response = await request.send();
+    if (response.statusCode == 201) {
+      final responseData = await response.stream.bytesToString();
+      final imageUrl = json.decode(responseData)['url'];
+      return imageUrl;
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> summarizeText(String text) async {
+    const url = '$baseUrl/api/summarize';
+    final apiKey = GetStorage().read('api_key');
 
     try {
       final response = await http.post(
-        url,
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
-          'X-API-KEY': apiKey,
+          'X-API-KEY': apiKey ?? '',
         },
-        body: jsonEncode(body),
+        body: jsonEncode({'text': text}),
       );
 
       if (response.statusCode == 200) {
-        return true;
+        return jsonDecode(response.body);
       } else {
-        print("Sync failed: ${response.body}");
-        return false;
+        print('Failed: ${response.body}');
+        return null;
       }
     } catch (e) {
-      print("Error syncing note: $e");
-      return false;
+      print('Error: $e');
+      return null;
     }
   }
 
-  // Ambil semua catatan user
-  static Future<List<Map<String, dynamic>>> getNotes(String apiKey) async {
-    final url = Uri.parse('$baseUrl/notes');
-
+  Future<Map<String, dynamic>?> uploadOCRImage(
+    File imageFile,
+    String apiKey,
+  ) async {
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-KEY': apiKey,
-        },
-      );
+      final url = Uri.parse('$baseUrl/api/ocr');
+      final request =
+          http.MultipartRequest('POST', url)
+            ..headers['X-API-KEY'] = apiKey
+            ..files.add(
+              await http.MultipartFile.fromPath('file', imageFile.path),
+            );
+
+      final response = await request.send();
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.cast<Map<String, dynamic>>();
+        final body = await response.stream.bytesToString();
+        return json.decode(body);
       } else {
-        print("Get notes failed: ${response.body}");
-        return [];
+        return null;
       }
     } catch (e) {
-      print("Error fetching notes: $e");
-      return [];
-    }
-  }
-
-  // Hapus catatan berdasarkan ID
-  static Future<bool> deleteNote(String apiKey, String noteId) async {
-    final url = Uri.parse('$baseUrl/notes/$noteId'); // sesuaikan dengan route
-
-    try {
-      final response = await http.delete(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-KEY': apiKey,
-        },
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      print("Delete note failed: $e");
-      return false;
+      rethrow;
     }
   }
 }

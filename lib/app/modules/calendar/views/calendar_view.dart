@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:vision_aid_app/app/routes/app_pages.dart';
 import '../controllers/calendar_controller.dart';
 import '../../../widgets/bottom_nav_bar.dart';
 
@@ -15,7 +16,7 @@ class CalendarView extends GetView<CalendarController> {
       bottomNavigationBar: BottomNavBar(currentIndex: 1),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.yellow[700],
-        onPressed: _showAddReminderDialog,
+        onPressed: ()=> Get.toNamed(Routes.NOTE_DETAIL),
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -27,7 +28,8 @@ class CalendarView extends GetView<CalendarController> {
                 focusedDay: controller.focusedDay.value,
                 firstDay: DateTime(2020),
                 lastDay: DateTime(2030),
-                selectedDayPredicate: (day) => isSameDay(controller.selectedDay.value, day),
+                selectedDayPredicate:
+                    (day) => isSameDay(controller.selectedDay.value, day),
                 onDaySelected: (selectedDay, focusedDay) {
                   controller.onDaySelected(selectedDay, focusedDay);
                   _showDayOptions(selectedDay);
@@ -36,16 +38,16 @@ class CalendarView extends GetView<CalendarController> {
                 eventLoader: controller.getEventsForDay,
                 calendarStyle: CalendarStyle(
                   todayDecoration: BoxDecoration(
-                    color: Colors.orange, 
-                    shape: BoxShape.circle
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
                   ),
                   selectedDecoration: BoxDecoration(
-                    color: Colors.blue, 
-                    shape: BoxShape.circle
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
                   ),
                   markerDecoration: BoxDecoration(
                     color: Colors.red,
-                    shape: BoxShape.circle
+                    shape: BoxShape.circle,
                   ),
                   markersAutoAligned: true,
                   markerSize: 6,
@@ -56,9 +58,7 @@ class CalendarView extends GetView<CalendarController> {
                 ),
               ),
               const SizedBox(height: 16),
-              Expanded(
-                child: _buildEventsList(),
-              ),
+              Expanded(child: _buildEventsList()),
             ],
           );
         }),
@@ -92,11 +92,14 @@ class CalendarView extends GetView<CalendarController> {
                   color: Colors.black.withOpacity(0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               title: Text(
                 event['title'],
                 style: const TextStyle(
@@ -105,15 +108,17 @@ class CalendarView extends GetView<CalendarController> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              subtitle: event['description'] != null && event['description'].isNotEmpty
-                  ? Text(
-                      event['description'],
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
-                    )
-                  : null,
+              subtitle:
+                  event['description'] != null &&
+                          event['description'].isNotEmpty
+                      ? Text(
+                        event['description'],
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 14,
+                        ),
+                      )
+                      : null,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -134,28 +139,29 @@ class CalendarView extends GetView<CalendarController> {
                         _confirmDeleteEvent(event['id']);
                       }
                     },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, color: Colors.blue),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete'),
-                          ],
-                        ),
-                      ),
-                    ],
+                    itemBuilder:
+                        (context) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, color: Colors.blue),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Delete'),
+                              ],
+                            ),
+                          ),
+                        ],
                   ),
                 ],
               ),
@@ -203,102 +209,100 @@ class CalendarView extends GetView<CalendarController> {
     final selectedColor = Colors.blue.obs;
 
     Get.dialog(
-      Obx(() => AlertDialog(
-        title: Text('Add Reminder for ${DateFormat('MMM d, y').format(day)}'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
+      Obx(
+        () => AlertDialog(
+          title: Text('Add Reminder for ${DateFormat('MMM d, y').format(day)}'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
                 ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: timeController,
-                decoration: const InputDecoration(
-                  labelText: 'Time (optional)',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.access_time),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: timeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Time (optional)',
+                    border: OutlineInputBorder(),
+                    suffixIcon: Icon(Icons.access_time),
+                  ),
+                  onTap: () async {
+                    final time = await showTimePicker(
+                      context: Get.context!,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (time != null) {
+                      timeController.text = time.format(Get.context!);
+                    }
+                  },
                 ),
-                onTap: () async {
-                  final time = await showTimePicker(
-                    context: Get.context!,
-                    initialTime: TimeOfDay.now(),
+                const SizedBox(height: 16),
+                const Text('Select Color:'),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildColorOption(Colors.blue, selectedColor),
+                    _buildColorOption(Colors.red, selectedColor),
+                    _buildColorOption(Colors.green, selectedColor),
+                    _buildColorOption(Colors.purple, selectedColor),
+                    _buildColorOption(Colors.orange, selectedColor),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: Get.back, child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                if (titleController.text.isEmpty) {
+                  Get.snackbar(
+                    'Error',
+                    'Title is required',
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
                   );
-                  if (time != null) {
-                    timeController.text = time.format(Get.context!);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text('Select Color:'),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildColorOption(Colors.blue, selectedColor),
-                  _buildColorOption(Colors.red, selectedColor),
-                  _buildColorOption(Colors.green, selectedColor),
-                  _buildColorOption(Colors.purple, selectedColor),
-                  _buildColorOption(Colors.orange, selectedColor),
-                ],
-              ),
-            ],
-          ),
+                  return;
+                }
+
+                Get.back(); // tutup popup SEBELUM simpan
+
+                final event = {
+                  'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                  'date': DateFormat('MMM d, y').format(day),
+                  'title': titleController.text,
+                  'description': descriptionController.text,
+                  'time': timeController.text,
+                  'color': selectedColor.value,
+                  'day': day,
+                };
+
+                controller.addEvent(event);
+
+                Future.delayed(const Duration(milliseconds: 300), () {
+                  Get.snackbar('Success', 'Reminder added');
+                });
+              },
+              child: const Text('Save'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: Get.back,
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (titleController.text.isEmpty) {
-                Get.snackbar(
-                  'Error',
-                  'Title is required',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red,
-                  colorText: Colors.white,
-                );
-                return;
-              }
-
-              final event = {
-                'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                'date': DateFormat('MMM d, y').format(day),
-                'title': titleController.text,
-                'description': descriptionController.text,
-                'time': timeController.text,
-                'color': selectedColor.value,
-                'day': day,
-              };
-
-              controller.addEvent(event);
-              Get.back();
-              Get.snackbar(
-                'Success',
-                'Reminder added',
-                snackPosition: SnackPosition.BOTTOM,
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      )),
+      ),
       barrierDismissible: false,
     );
   }
@@ -306,107 +310,110 @@ class CalendarView extends GetView<CalendarController> {
   void _showEditReminderDialog(Map<String, dynamic> event) {
     final day = event['day'] as DateTime;
     final titleController = TextEditingController(text: event['title']);
-    final descriptionController = TextEditingController(text: event['description']);
+    final descriptionController = TextEditingController(
+      text: event['description'],
+    );
     final timeController = TextEditingController(text: event['time']);
     final selectedColor = (event['color'] as Color).obs;
 
     Get.dialog(
-      Obx(() => AlertDialog(
-        title: Text('Edit Reminder for ${DateFormat('MMM d, y').format(day)}'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
+      Obx(
+        () => AlertDialog(
+          title: Text(
+            'Edit Reminder for ${DateFormat('MMM d, y').format(day)}',
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
                 ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: timeController,
-                decoration: const InputDecoration(
-                  labelText: 'Time (optional)',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.access_time),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: timeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Time (optional)',
+                    border: OutlineInputBorder(),
+                    suffixIcon: Icon(Icons.access_time),
+                  ),
+                  onTap: () async {
+                    final time = await showTimePicker(
+                      context: Get.context!,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (time != null) {
+                      timeController.text = time.format(Get.context!);
+                    }
+                  },
                 ),
-                onTap: () async {
-                  final time = await showTimePicker(
-                    context: Get.context!,
-                    initialTime: TimeOfDay.now(),
+                const SizedBox(height: 16),
+                const Text('Select Color:'),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildColorOption(Colors.blue, selectedColor),
+                    _buildColorOption(Colors.red, selectedColor),
+                    _buildColorOption(Colors.green, selectedColor),
+                    _buildColorOption(Colors.purple, selectedColor),
+                    _buildColorOption(Colors.orange, selectedColor),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: Get.back, child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                if (titleController.text.isEmpty) {
+                  Get.snackbar(
+                    'Error',
+                    'Title is required',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: Colors.red,
+                    colorText: Colors.white,
                   );
-                  if (time != null) {
-                    timeController.text = time.format(Get.context!);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text('Select Color:'),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildColorOption(Colors.blue, selectedColor),
-                  _buildColorOption(Colors.red, selectedColor),
-                  _buildColorOption(Colors.green, selectedColor),
-                  _buildColorOption(Colors.purple, selectedColor),
-                  _buildColorOption(Colors.orange, selectedColor),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: Get.back,
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (titleController.text.isEmpty) {
+                  return;
+                }
+
+                final updatedEvent = {
+                  'id': event['id'],
+                  'date': DateFormat('MMM d, y').format(day),
+                  'title': titleController.text,
+                  'description': descriptionController.text,
+                  'time': timeController.text,
+                  'color': selectedColor.value,
+                  'day': day,
+                };
+
+                controller.updateEvent(event['id'], updatedEvent);
+                Get.back();
                 Get.snackbar(
-                  'Error',
-                  'Title is required',
+                  'Updated',
+                  'Reminder updated',
                   snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red,
-                  colorText: Colors.white,
                 );
-                return;
-              }
-
-              final updatedEvent = {
-                'id': event['id'],
-                'date': DateFormat('MMM d, y').format(day),
-                'title': titleController.text,
-                'description': descriptionController.text,
-                'time': timeController.text,
-                'color': selectedColor.value,
-                'day': day,
-              };
-
-              controller.updateEvent(event['id'], updatedEvent);
-              Get.back();
-              Get.snackbar(
-                'Updated',
-                'Reminder updated',
-                snackPosition: SnackPosition.BOTTOM,
-              );
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      )),
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        ),
+      ),
       barrierDismissible: false,
     );
   }
@@ -421,9 +428,10 @@ class CalendarView extends GetView<CalendarController> {
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
-          border: selectedColor.value == color
-              ? Border.all(color: Colors.black, width: 2)
-              : null,
+          border:
+              selectedColor.value == color
+                  ? Border.all(color: Colors.black, width: 2)
+                  : null,
         ),
       ),
     );
@@ -435,10 +443,7 @@ class CalendarView extends GetView<CalendarController> {
         title: const Text('Delete Reminder'),
         content: const Text('Are you sure you want to delete this reminder?'),
         actions: [
-          TextButton(
-            onPressed: Get.back,
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: Get.back, child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               controller.deleteEvent(id);
