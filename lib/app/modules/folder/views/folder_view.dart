@@ -72,7 +72,19 @@ class FolderView extends GetView<FolderController> {
       ),
       body: Obx(() {
         if (controller.folders.isEmpty) {
-          return const Center(child: Text('Belum ada folder'));
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.folder_off, size: 100, color: Colors.grey),
+                SizedBox(height: 12),
+                Text(
+                  'Belum ada folder',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ],
+            ),
+          );
         }
 
         return Padding(
@@ -84,6 +96,7 @@ class FolderView extends GetView<FolderController> {
                   final noteIds = entry.value;
 
                   return ExpansionTile(
+                    leading: const Icon(Icons.folder, color: Colors.orange),
                     title: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -93,85 +106,77 @@ class FolderView extends GetView<FolderController> {
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit,
-                                size: 20,
-                                color: Colors.blue,
-                              ),
-                              onPressed: () {
-                                final TextEditingController editController =
-                                    TextEditingController(text: folderName);
-                                Get.defaultDialog(
-                                  title: 'Edit Nama Folder',
-                                  content: Column(
-                                    children: [
-                                      TextField(
-                                        controller: editController,
-                                        decoration: const InputDecoration(
-                                          labelText: 'Nama baru',
-                                        ),
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert),
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              final TextEditingController editController =
+                                  TextEditingController(text: folderName);
+                              Get.defaultDialog(
+                                title: 'Edit Nama Folder',
+                                content: Column(
+                                  children: [
+                                    TextField(
+                                      controller: editController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Nama baru',
                                       ),
-                                      const SizedBox(height: 16),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          final newName =
-                                              editController.text.trim();
-                                          if (newName.isNotEmpty &&
-                                              newName != folderName) {
-                                            // Rename logic
-                                            final notes = controller.folders
-                                                .remove(folderName);
-                                            controller.folders[newName] =
-                                                notes!;
-                                            storage.write(
-                                              'folders',
-                                              controller.folders,
-                                            );
-                                            controller.folders.refresh();
-                                            Get.back();
-                                          }
-                                        },
-                                        child: const Text('Simpan'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete,
-                                size: 20,
-                                color: Colors.red,
-                              ),
-                              onPressed: () {
-                                Get.defaultDialog(
-                                  title: 'Hapus Folder',
-                                  middleText:
-                                      'Yakin ingin menghapus folder "$folderName"? Semua catatan di dalamnya akan dihapus.',
-                                  textCancel: 'Batal',
-                                  textConfirm: 'Hapus',
-                                  confirmTextColor: Colors.white,
-                                  onConfirm: () {
-                                    for (var id
-                                        in controller.folders[folderName]!) {
-                                      storage.remove(id);
-                                    }
-                                    controller.folders.remove(folderName);
-                                    storage.write(
-                                      'folders',
-                                      controller.folders,
-                                    );
-                                    controller.folders.refresh();
-                                    Get.back();
-                                  },
-                                );
-                              },
-                            ),
-                          ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        final newName =
+                                            editController.text.trim();
+                                        if (newName.isNotEmpty &&
+                                            newName != folderName) {
+                                          final notes = controller.folders
+                                              .remove(folderName);
+                                          controller.folders[newName] = notes!;
+                                          storage.write(
+                                            'folders',
+                                            controller.folders,
+                                          );
+                                          controller.folders.refresh();
+                                          Get.back();
+                                        }
+                                      },
+                                      child: const Text('Simpan'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            } else if (value == 'delete') {
+                              Get.defaultDialog(
+                                title: 'Hapus Folder',
+                                middleText:
+                                    'Yakin ingin menghapus folder "$folderName"? Semua catatan di dalamnya akan dihapus.',
+                                textCancel: 'Batal',
+                                textConfirm: 'Hapus',
+                                confirmTextColor: Colors.white,
+                                onConfirm: () {
+                                  for (var id
+                                      in controller.folders[folderName]!) {
+                                    storage.remove(id);
+                                  }
+                                  controller.folders.remove(folderName);
+                                  storage.write('folders', controller.folders);
+                                  controller.folders.refresh();
+                                  Get.back();
+                                },
+                              );
+                            }
+                          },
+                          itemBuilder:
+                              (context) => [
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text('Edit'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text('Hapus'),
+                                ),
+                              ],
                         ),
                       ],
                     ),
@@ -179,7 +184,9 @@ class FolderView extends GetView<FolderController> {
                         noteIds.map((noteId) {
                           final note = storage.read(noteId);
                           if (note == null) return const SizedBox.shrink();
+
                           return ListTile(
+                            leading: const Icon(Icons.note, color: Colors.blue),
                             title: Text(
                               note['content'] ?? 'Tanpa isi',
                               maxLines: 2,

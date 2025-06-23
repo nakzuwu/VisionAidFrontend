@@ -57,6 +57,22 @@ class Note {
       isSynced: true,
     );
   }
+  factory Note.fromMap(Map<String, dynamic> map) {
+    return Note(
+      id: map['id'] ?? '',
+      title: map['title'] ?? '',
+      content: map['content'] ?? '',
+      folder: map['folder'] ?? '',
+      createdAt: DateTime.tryParse(map['created_at'] ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(map['updated_at'] ?? '') ?? DateTime.now(),
+      images: List<String>.from(map['images'] ?? []),
+      isSynced: map['isSynced'] ?? false,
+      lastOpened: map['lastOpened'] != null
+          ? DateTime.tryParse(map['lastOpened']) ?? DateTime.now()
+          : null,
+    );
+  }
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -67,6 +83,8 @@ class Note {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'images': images,
+      'isSynced': isSynced,
+      'lastOpened': lastOpened?.toIso8601String(),
     };
   }
 }

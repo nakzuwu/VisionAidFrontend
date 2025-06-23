@@ -46,7 +46,10 @@ class HomeView extends GetView<HomeController> {
                 children: [
                   Text(
                     'Halo ${GetStorage().read('username') ?? 'User'}!',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Text(
                     'Apa yang kau lakukan hari ini?',
@@ -91,28 +94,40 @@ class HomeView extends GetView<HomeController> {
                     'Terakhir Dilihat',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
-                  const SizedBox(height: 8),
 
-                  // Obx(() {
-                  //   final recentNotes = notesController.recentNotes.take(3).toList();
+                  Obx(() {
+                    final recentIds = controller.recentNoteIds;
 
-                  //   return recentNotes.isEmpty
-                  //     ? const Padding(
-                  //         padding: EdgeInsets.symmetric(vertical: 8),
-                  //         child: Text('Tidak ada catatan terbaru'),
-                  //       )
-                  //     : SizedBox(
-                  //         height: 120,
-                  //         child: ListView.builder(
-                  //           scrollDirection: Axis.horizontal,
-                  //           itemCount: recentNotes.length,
-                  //           itemBuilder: (_, index) {
-                  //             final note = recentNotes[index];
-                  //             return _buildNoteCard(note);
-                  //           },
-                  //         ),
-                  //       );
-                  // }),
+                    if (recentIds.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Text('Tidak ada catatan terbaru'),
+                      );
+                    }
+
+                    final recentNotes =
+                        recentIds
+                            .map((id) {
+                              final noteMap = GetStorage().read(id);
+                              if (noteMap == null) return null;
+                              return Note.fromMap(noteMap);
+                            })
+                            .whereType<Note>()
+                            .toList();
+
+                    return SizedBox(
+                      height: 120,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: recentNotes.length,
+                        itemBuilder: (_, index) {
+                          final note = recentNotes[index];
+                          return _buildNoteCard(note);
+                        },
+                      ),
+                    );
+                  }),
+
                   const SizedBox(height: 24),
 
                   // Upcoming Reminders Section

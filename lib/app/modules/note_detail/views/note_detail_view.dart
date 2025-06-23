@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:vision_aid_app/app/modules/note_detail/controllers/note_detail_controller.dart';
 
 class NoteDetailView extends StatelessWidget {
@@ -14,7 +15,20 @@ class NoteDetailView extends StatelessWidget {
       tag: noteId,
     );
     final noteController = Get.find<NoteDetailController>(tag: noteId);
+    // Dalam NoteDetailView, misalnya di initState atau onInit controller:
+    final id = Get.arguments;
+    final recent = GetStorage().read<List>('recent_notes') ?? [];
 
+    if (id != null) {
+      // Hapus jika sudah ada, lalu tambah di depan
+      recent.remove(id);
+      recent.insert(0, id);
+
+      // Simpan hanya 3 terakhir
+      if (recent.length > 3) recent.removeRange(3, recent.length);
+
+      GetStorage().write('recent_notes', recent);
+    }
 
     return Scaffold(
       appBar: AppBar(
