@@ -10,7 +10,7 @@ class NoteCard extends StatelessWidget {
     return ListTile(
       title: Text(note.title),
       subtitle: Text(
-        note.content.length > 100 ? note.content.substring(0, 100) + "..." : note.content,
+        note.content.length > 100 ? "${note.content.substring(0, 100)}..." : note.content,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),

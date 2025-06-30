@@ -1,17 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:vision_aid_app/app/data/model/note_model.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:vision_aid_app/app/data/services/api_service.dart';
 import 'package:vision_aid_app/app/modules/folder/controllers/folder_controller.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 class NoteDetailController extends GetxController {
   final TextEditingController textController = TextEditingController();
@@ -26,10 +30,11 @@ class NoteDetailController extends GetxController {
   final RxBool isOnline = false.obs;
   final selectedText = ''.obs;
   final TextEditingController summaryController = TextEditingController();
+  final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   String? noteId;
-
   NoteDetailController({this.noteId});
 
+  @override
   void onInit() {
     super.onInit();
     _checkConnectivity();
@@ -273,7 +278,7 @@ class NoteDetailController extends GetxController {
     final selectedText = text.substring(selection.start, selection.end);
 
     if (selectedText.isNotEmpty) {
-      final formattedText = '~${selectedText}~';
+      final formattedText = '~$selectedText~';
       textController.text = text.replaceRange(
         selection.start,
         selection.end,
@@ -354,6 +359,7 @@ class NoteDetailController extends GetxController {
   @override
   void onClose() {
     textController.dispose();
+    summaryController.dispose();
     super.onClose();
   }
 
@@ -530,5 +536,91 @@ class NoteDetailController extends GetxController {
       Get.back();
       Get.snackbar('Error', 'Terjadi kesalahan saat OCR');
     }
+  }
+
+  Future<void> showAudioOptions() async {
+    await Get.bottomSheet(
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.mic),
+            title: const Text("Rekam Audio"),
+            onTap: () {
+              Get.back();
+              recordAudio();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.folder),
+            title: const Text("Pilih File Audio"),
+            onTap: () {
+              Get.back();
+              pickAudioFile();
+            },
+          ),
+        ],
+      ),
+      backgroundColor: Colors.white,
+    );
+  }
+
+  Future<void> recordAudio() async {
+    final dir = await getTemporaryDirectory();
+    final path = '${dir.path}/temp_record.wav';
+    final allowed = await requestMicPermission();
+    if (!allowed) {
+      Get.snackbar('Izin ditolak', 'Mikrofon dibutuhkan untuk merekam');
+      return;
+    }
+
+    await _recorder.openRecorder();
+    await _recorder.startRecorder(toFile: path);
+
+    Get.snackbar(
+      'Merekam',
+      'Tekan untuk berhenti',
+      duration: const Duration(seconds: 10),
+      mainButton: TextButton(
+        onPressed: () async {
+          await _recorder.stopRecorder();
+          await _recorder.closeRecorder();
+          await _uploadAndShow(File(path));
+        },
+        child: const Text('Stop'),
+      ),
+    );
+  }
+
+  Future<void> pickAudioFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['wav', 'mp3', 'm4a'],
+    );
+    if (result != null && result.files.single.path != null) {
+      await _uploadAndShow(File(result.files.single.path!));
+    }
+  }
+
+  Future<void> _uploadAndShow(File file) async {
+    final result = await ApiService().uploadAudio(file);
+    if (result != null) {
+      try {
+        final data = jsonDecode(result);
+        if (data['transcript'] != null) {
+          textController.text += '\n${data['transcript']}\n';
+          Get.snackbar('Berhasil', 'Audio berhasil ditranskripsi');
+        } else {
+          Get.snackbar('Gagal', 'Transkripsi tidak ditemukan');
+        }
+      } catch (e) {
+        Get.snackbar('Error', 'Gagal membaca hasil transkripsi');
+      }
+    }
+  }
+
+  Future<bool> requestMicPermission() async {
+    final status = await Permission.microphone.request();
+    return status.isGranted;
   }
 }

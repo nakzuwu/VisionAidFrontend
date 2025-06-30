@@ -133,7 +133,6 @@ class AuthService extends GetxService {
     }
   }
 
-  /// ✅ Logout ke API + hapus token lokal
   Future<void> logoutUser() async {
     final token = box.read("token");
     if (token == null) {
@@ -156,6 +155,8 @@ class AuthService extends GetxService {
       Get.snackbar("Logout gagal", "Gagal logout dari server");
     }
   }
+
+  String? get token => box.read<String>('token');
 
   Future<Map<String, dynamic>> loginWithGoogle() async {
     try {

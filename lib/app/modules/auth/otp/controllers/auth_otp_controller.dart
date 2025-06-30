@@ -33,16 +33,18 @@ class OtpController extends GetxController {
       );
 
       Get.snackbar('Berhasil', result['msg']);
-      Get.offAllNamed('/home');
+      Get.offAllNamed('/login');
     } catch (e) {
       Get.snackbar('Gagal', e.toString().replaceAll('Exception: ', ''));
     } finally {
       isLoading.value = false;
     }
   }
+
   void resendOtp() {
     Get.snackbar('Info', 'Kode OTP baru telah dikirim');
   }
+
   @override
   void onClose() {
     otpC.dispose();

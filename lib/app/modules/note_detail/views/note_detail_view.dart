@@ -97,6 +97,11 @@ class NoteDetailView extends StatelessWidget {
             onPressed: controller.pickImageForOCR,
           ),
           IconButton(
+            icon: const Icon(Icons.mic),
+            tooltip: 'Transkripsi Audio',
+            onPressed: controller.showAudioOptions,
+          ),
+          IconButton(
             icon: const Icon(Icons.save),
             onPressed: controller.saveNoteLocally,
           ),
@@ -150,13 +155,13 @@ class NoteDetailView extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Image.file(File(imagePath)),
                 );
-              }).toList(),
+              }),
               ...controller.remoteImages.map((imageUrl) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Image.network(imageUrl),
                 );
-              }).toList(),
+              }),
             ],
           ),
         );

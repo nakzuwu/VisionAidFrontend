@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:http/http.dart';
 import 'package:vision_aid_app/app/modules/note_detail/views/note_detail_view.dart';
 import 'package:vision_aid_app/app/routes/app_pages.dart';
 import 'package:vision_aid_app/app/widgets/bottom_nav_bar.dart';
@@ -35,6 +34,7 @@ class FolderView extends GetView<FolderController> {
       ),
     );
   }
+  
 
   @override
   Widget build(BuildContext context) {

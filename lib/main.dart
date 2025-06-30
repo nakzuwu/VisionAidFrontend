@@ -10,7 +10,7 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await GetStorage.init();
+  await GetStorage.init();    
   if (kIsWeb) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.web,

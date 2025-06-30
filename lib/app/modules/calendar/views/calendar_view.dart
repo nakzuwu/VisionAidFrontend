@@ -7,7 +7,7 @@ import '../controllers/calendar_controller.dart';
 import '../../../widgets/bottom_nav_bar.dart';
 
 class CalendarView extends GetView<CalendarController> {
-  CalendarView({super.key});
+  const CalendarView({super.key});
 
   @override
   Widget build(BuildContext context) {

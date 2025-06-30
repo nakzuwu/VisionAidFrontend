@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:vision_aid_app/app/data/model/note_model.dart';
+import 'package:get/get.dart';
 
 class ApiService {
   static const String baseUrl = 'https://visionaid.lolihunter.my.id/';
@@ -103,6 +104,29 @@ class ApiService {
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  Future<String?> uploadAudio(File file) async {
+    final token = GetStorage().read('token');
+    if (token == null) {
+      Get.snackbar('Error', 'Token belum tersedia, silakan login ulang.');
+      return null;
+    }
+
+    final uri = Uri.parse('$baseUrl/api/transcribe');
+    final request =
+        http.MultipartRequest('POST', uri)
+          ..headers['Authorization'] = 'Bearer $token'
+          ..files.add(await http.MultipartFile.fromPath('file', file.path));
+
+    final response = await request.send();
+    if (response.statusCode == 200) {
+      final resStr = await response.stream.bytesToString();
+      return resStr;
+    } else {
+      Get.snackbar('Gagal', 'Status ${response.statusCode}');
+      return null;
     }
   }
 }
