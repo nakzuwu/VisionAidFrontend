@@ -57,7 +57,12 @@ class NoteDetailController extends GetxController {
     final noteData = storage.read(noteId!);
     if (noteData != null) {
       final note = Note.fromJson(noteData);
-      _populateNote(note);
+
+      // 🟡 Update waktu terakhir dibuka
+      final updated = note.copyWith(lastOpened: DateTime.now());
+      storage.write(note.id, updated.toJson());
+
+      _populateNote(updated);
     } else {
       Get.snackbar('Error', 'Note tidak ditemukan');
     }
@@ -69,6 +74,15 @@ class NoteDetailController extends GetxController {
     images.value = note.images.where((img) => img.startsWith('/')).toList();
     remoteImages.value =
         note.images.where((img) => !img.startsWith('/')).toList();
+  }
+
+  void openNote(String id) {
+    final data = GetStorage().read(id);
+    if (data != null) {
+      final note = Note.fromMap(Map<String, dynamic>.from(data));
+      final updated = note.copyWith(lastOpened: DateTime.now());
+      GetStorage().write(id, updated.toJson());
+    }
   }
 
   Future<void> fetchNoteFromServer() async {
@@ -185,9 +199,11 @@ class NoteDetailController extends GetxController {
   void saveNoteLocally() {
     final id = noteId ?? uuid.v4();
 
-    // Kalau sedang membuat catatan baru, simpan ID-nya ke controller agar tidak duplikat
     if (noteId == null) {
-      Get.find<NoteDetailController>().noteId = id;
+      noteId = id; // langsung set ke instansi controller aktif
+    }
+    if (textController.text.trim().isEmpty && images.isEmpty) {
+      return; // tidak menyimpan catatan kosong
     }
 
     final note = Note(
@@ -363,6 +379,24 @@ class NoteDetailController extends GetxController {
     super.onClose();
   }
 
+  var allNotes = <Note>[].obs;
+
+  void loadAllNotes() {
+    final keys = GetStorage().getKeys();
+    allNotes.value =
+        keys
+            .map((key) {
+              final raw = GetStorage().read(key);
+              if (raw is Map) {
+                return Note.fromMap(Map<String, dynamic>.from(raw));
+              }
+
+              return null;
+            })
+            .whereType<Note>()
+            .toList();
+  }
+
   void changeTab(int index) {
     currentIndex.value = index;
     switch (index) {
@@ -474,7 +508,9 @@ class NoteDetailController extends GetxController {
       }
 
       final extractedText = response['text'];
-      final ocrTextController = TextEditingController(text: extractedText);
+      final controller = TextEditingController(
+        text: extractedText,
+      ); // baru setiap kali
 
       Get.defaultDialog(
         title: 'Hasil OCR',
@@ -482,7 +518,7 @@ class NoteDetailController extends GetxController {
           child: Column(
             children: [
               TextField(
-                controller: ocrTextController,
+                controller: controller,
                 maxLines: null,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
@@ -493,7 +529,7 @@ class NoteDetailController extends GetxController {
               ElevatedButton(
                 onPressed: () {
                   final noteController = Get.find<NoteDetailController>();
-                  final ocrText = ocrTextController.text;
+                  final ocrText = controller.text.trim();
 
                   final selection = noteController.textController.selection;
                   final oldText = noteController.textController.text;
@@ -514,13 +550,7 @@ class NoteDetailController extends GetxController {
                     offset: safeStart + ocrText.length + 2,
                   );
 
-                  noteController
-                      .textController
-                      .selection = TextSelection.collapsed(
-                    offset: selection.start + ocrText.length + 2,
-                  );
-
-                  Get.back();
+                  Get.back(); // Tutup dialog
                 },
                 child: const Text('Gunakan Hasil'),
               ),
@@ -568,6 +598,7 @@ class NoteDetailController extends GetxController {
   Future<void> recordAudio() async {
     final dir = await getTemporaryDirectory();
     final path = '${dir.path}/temp_record.wav';
+
     final allowed = await requestMicPermission();
     if (!allowed) {
       Get.snackbar('Izin ditolak', 'Mikrofon dibutuhkan untuk merekam');
@@ -575,20 +606,29 @@ class NoteDetailController extends GetxController {
     }
 
     await _recorder.openRecorder();
-    await _recorder.startRecorder(toFile: path);
+    await _recorder.startRecorder(
+      toFile: path,
+      codec: Codec.pcm16WAV, // penting agar file tidak corrupt
+    );
 
-    Get.snackbar(
-      'Merekam',
-      'Tekan untuk berhenti',
-      duration: const Duration(seconds: 10),
-      mainButton: TextButton(
-        onPressed: () async {
-          await _recorder.stopRecorder();
-          await _recorder.closeRecorder();
-          await _uploadAndShow(File(path));
-        },
-        child: const Text('Stop'),
+    // Tampilkan dialog permanen dengan tombol STOP
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Merekam Audio'),
+        content: const Text('Audio sedang direkam...'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await _recorder.stopRecorder();
+              await _recorder.closeRecorder();
+              Get.back(); // tutup dialog
+              await _uploadAndShow(File(path));
+            },
+            child: const Text('Stop'),
+          ),
+        ],
       ),
+      barrierDismissible: false,
     );
   }
 

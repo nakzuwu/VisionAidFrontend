@@ -135,25 +135,40 @@ class AuthService extends GetxService {
 
   Future<void> logoutUser() async {
     final token = box.read("token");
+
+    // Tetap hapus data lokal walau token invalid
+    Future<void> cleanLogout() async {
+      await box.remove("token");
+      await box.remove("username");
+      // Hapus data lain jika ada (misal: API key)
+      Get.offAllNamed(Routes.AUTH_LOGIN);
+    }
+
     if (token == null) {
-      Get.snackbar("Logout gagal", "Token tidak ditemukan");
+      Get.snackbar("Logout", "Token tidak ditemukan. Mengarahkan ke login.");
+      await cleanLogout();
       return;
     }
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/logout'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/logout'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      await box.remove("token");
-      Get.offAllNamed(Routes.AUTH_LOGIN);
-    } else {
-      Get.snackbar("Logout gagal", "Gagal logout dari server");
+      if (response.statusCode == 200) {
+        Get.snackbar("Logout", "Berhasil logout");
+      } else {
+        Get.snackbar("Logout", "Token kadaluarsa, logout lokal dijalankan");
+      }
+    } catch (e) {
+      Get.snackbar("Logout Error", "Terjadi kesalahan koneksi");
     }
+
+    await cleanLogout();
   }
 
   String? get token => box.read<String>('token');
@@ -198,6 +213,98 @@ class AuthService extends GetxService {
       }
     } catch (e) {
       return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  Future<bool> updateUsername(String newUsername) async {
+    final token = box.read('token');
+
+    if (newUsername.isEmpty) {
+      Get.snackbar('Error', 'Username tidak boleh kosong');
+      return false;
+    }
+
+    final res = await http.put(
+      Uri.parse('$baseUrl/username'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'username': newUsername}),
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      final newToken = data['token'];
+      if (newToken != null) {
+        box.write('token', newToken);
+      }
+
+      box.write('username', newUsername);
+      return true;
+    }
+
+    Get.snackbar('Gagal', 'Gagal mengubah username');
+    return false; // <= wajib ditambahkan agar return selalu ada
+  }
+
+  Future<bool> updatePassword(String oldPassword, String newPassword) async {
+    final token = box.read('token');
+
+    if (oldPassword.isEmpty || newPassword.isEmpty) {
+      Get.snackbar('Error', 'Semua field harus diisi');
+      return false;
+    }
+
+    final res = await http.put(
+      Uri.parse('$baseUrl/password'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'old_password': oldPassword,
+        'new_password': newPassword,
+      }),
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      final newToken = data['token'];
+      if (newToken != null) {
+        box.write('token', newToken);
+      }
+
+      Get.snackbar(
+        'Berhasil',
+        'Password berhasil diubah. Silakan login ulang.',
+      );
+      return true;
+    } else {
+      final errorMsg =
+          jsonDecode(res.body)['error'] ?? 'Gagal mengubah password';
+      Get.snackbar('Gagal', errorMsg);
+      return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchLoginHistory() async {
+    final token = box.read('token');
+
+    final res = await http.get(
+      Uri.parse('$baseUrl/history'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (res.statusCode == 200) {
+      final List data = jsonDecode(res.body);
+      return data.map((e) => e as Map<String, dynamic>).toList();
+    } else {
+      Get.snackbar("Error", "Gagal mengambil riwayat login");
+      return [];
     }
   }
 }

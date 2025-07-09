@@ -16,7 +16,8 @@ abstract class Routes {
   static const AUTH_OTP = _Paths.AUTH_OTP;
   static const MEDIA = _Paths.MEDIA;
   static const AUTH_FORGOT_PASSWORD = _Paths.AUTH_FORGOT_PASSWORD;
-  static const AUTH_RESET_PASSWORD =  _Paths.AUTH_RESET_PASSWORD;
+  static const AUTH_RESET_PASSWORD = _Paths.AUTH_RESET_PASSWORD;
+  static const LOGIN_HISTORY = _Paths.LOGIN_HISTORY;
 }
 
 abstract class _Paths {
@@ -35,4 +36,5 @@ abstract class _Paths {
   static const MEDIA = '/media';
   static const AUTH_FORGOT_PASSWORD = '/forgot-password';
   static const AUTH_RESET_PASSWORD = '/reset-password';
+  static const LOGIN_HISTORY = '/login-history';
 }

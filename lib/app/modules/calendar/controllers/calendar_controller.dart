@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 
 class CalendarController extends GetxController {
   final selectedDay = DateTime.now().obs;
@@ -13,13 +14,13 @@ class CalendarController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadEvents(); // ⬅️ Load dari storage saat controller dibuat
+    _loadEvents();
   }
 
-  void onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    this.selectedDay.value = selectedDay;
-    this.focusedDay.value = focusedDay;
-    _updateSelectedEvents(selectedDay);
+  void onDaySelected(DateTime selected, DateTime focused) {
+    selectedDay.value = selected;
+    focusedDay.value = focused;
+    _updateSelectedEvents(selected);
   }
 
   List<Map<String, dynamic>> getEventsForDay(DateTime day) {
@@ -31,15 +32,14 @@ class CalendarController extends GetxController {
     final stored = storage.read('events');
     if (stored != null) {
       final Map<String, dynamic> decoded = json.decode(stored);
-
       events.clear();
       decoded.forEach((key, value) {
-        final parsed = DateTime.parse(key);
+        final parsedDate = DateTime.parse(key);
         final normalizedKey = DateTime(
-          parsed.year,
-          parsed.month,
-          parsed.day,
-        ); // ✅ normalize!
+          parsedDate.year,
+          parsedDate.month,
+          parsedDate.day,
+        );
 
         final restoredEvents =
             (value as List).map<Map<String, dynamic>>((event) {
@@ -47,10 +47,11 @@ class CalendarController extends GetxController {
               return {
                 ...event,
                 'day': rawDay is DateTime ? rawDay : DateTime.parse(rawDay),
+                'color': Color(event['color']), // ✅ restore Color
               };
             }).toList();
 
-        events[normalizedKey] = restoredEvents; // ✅ pakai normalizedKey
+        events[normalizedKey] = restoredEvents;
       });
 
       _updateSelectedEvents(selectedDay.value);
@@ -60,18 +61,17 @@ class CalendarController extends GetxController {
   void _saveEvents() {
     final Map<String, dynamic> eventsMap = {};
     events.forEach((date, eventList) {
-      final normalizedKey = DateTime(
-        date.year,
-        date.month,
-        date.day,
-      ); // ✅ normalize
-
+      final normalizedKey = DateTime(date.year, date.month, date.day);
       final serializedEvents =
           eventList.map((event) {
             final eventCopy = Map<String, dynamic>.from(event);
             final dayVal = eventCopy['day'];
             if (dayVal is DateTime) {
               eventCopy['day'] = dayVal.toIso8601String();
+            }
+            final colorVal = eventCopy['color'];
+            if (colorVal is Color) {
+              eventCopy['color'] = colorVal.value; // ✅ save color as int
             }
             return eventCopy;
           }).toList();
@@ -85,7 +85,7 @@ class CalendarController extends GetxController {
   void addEvent(Map<String, dynamic> event) {
     final rawDay = event['day'];
     final day = rawDay is DateTime ? rawDay : DateTime.parse(rawDay);
-    final dayKey = DateTime(day.year, day.month, day.day); // ✅ normalize
+    final dayKey = DateTime(day.year, day.month, day.day);
 
     final eventCopy = Map<String, dynamic>.from(event);
     eventCopy['day'] = day;
@@ -95,6 +95,7 @@ class CalendarController extends GetxController {
 
     _updateSelectedEvents(selectedDay.value);
     _saveEvents();
+    focusedDay.refresh(); // ✅ update calendar markers
   }
 
   void updateEvent(String id, Map<String, dynamic> updatedEvent) {
@@ -102,6 +103,7 @@ class CalendarController extends GetxController {
     addEvent(updatedEvent);
     _saveEvents();
     selectedEvents.refresh();
+    focusedDay.refresh(); // ✅ ensure calendar updates
   }
 
   void deleteEvent(String id) {
@@ -111,6 +113,7 @@ class CalendarController extends GetxController {
     _updateSelectedEvents(selectedDay.value);
     _saveEvents();
     selectedEvents.refresh();
+    focusedDay.refresh(); // ✅ ensure marker removed
   }
 
   void _updateSelectedEvents(DateTime day) {
@@ -151,7 +154,6 @@ class CalendarController extends GetxController {
             b['day'] is DateTime
                 ? b['day']
                 : DateTime.tryParse(b['day'].toString()) ?? DateTime.now();
-
         return aDate.compareTo(bDate);
       });
   }

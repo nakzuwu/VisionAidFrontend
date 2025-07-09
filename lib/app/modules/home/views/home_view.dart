@@ -17,8 +17,14 @@ class HomeView extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    final CalendarController calendarController = Get.put(CalendarController(), permanent: true);
-    final NoteDetailController notesController = Get.put(NoteDetailController(), permanent: true);
+    final CalendarController calendarController = Get.put(
+      CalendarController(),
+      permanent: true,
+    );
+    final NoteDetailController notesController = Get.put(
+      NoteDetailController(),
+      permanent: true,
+    );
     final username = GetStorage().read('username') ?? 'User';
 
     return Scaffold(
@@ -40,9 +46,15 @@ class HomeView extends GetView<HomeController> {
                 children: [
                   Text(
                     'Halo $username!',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const Text('Apa yang kau lakukan hari ini?', style: TextStyle(color: Colors.grey)),
+                  const Text(
+                    'Apa yang kau lakukan hari ini?',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: searchController,
@@ -59,78 +71,92 @@ class HomeView extends GetView<HomeController> {
               ),
             ),
 
-            // Banner
-            Container(
-              height: 150,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                image: const DecorationImage(
-                  image: AssetImage('assets/quotes.png'),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-
-            // Folder Chart
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Statistik Folder', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  const SizedBox(height: 8),
-                  SizedBox(height: 200, child: _buildFolderChart()),
-                ],
-              ),
-            ),
-
-            // Main Content Area
+            // Main Content
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16),
-                children: [
-                  const Text('Terakhir Dilihat', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
 
+                children: [
+                  // Banner
+                  Container(
+                    height: 150,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/quotes.png'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  const Text(
+                    'Terakhir Dilihat',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
                   Obx(() {
-                    final recentIds = controller.recentNoteIds;
-                    if (recentIds.isEmpty) {
+                    final notes =
+                        notesController.allNotes
+                            .where((note) => note.lastOpened != null)
+                            .toList()
+                          ..sort(
+                            (a, b) => b.lastOpened!.compareTo(a.lastOpened!),
+                          );
+
+                    final last3 = notes.take(3).toList();
+
+                    if (last3.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Text('Tidak ada catatan terbaru'),
+                        child: Text('Belum ada catatan yang dibuka.'),
                       );
                     }
-
-                    final recentNotes = recentIds.map((id) {
-                      final noteMap = GetStorage().read(id);
-                      if (noteMap == null) return null;
-                      return Note.fromMap(noteMap);
-                    }).whereType<Note>().toList();
 
                     return SizedBox(
                       height: 120,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: recentNotes.length,
-                        itemBuilder: (_, index) => _buildNoteCard(recentNotes[index]),
+                        itemCount: last3.length,
+                        itemBuilder: (_, index) => _buildNoteCard(last3[index]),
                       ),
                     );
                   }),
 
                   const SizedBox(height: 24),
-                  const Text('Yang akan datang', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const Text(
+                    'Yang akan datang',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
                   const SizedBox(height: 8),
 
                   Obx(() {
                     final query = searchQuery.value;
                     final allReminders = calendarController.upcomingReminders;
-                    final filteredReminders = query.isEmpty
-                        ? allReminders
-                        : allReminders.where((r) {
-                            final title = (r['title'] ?? '').toString().toLowerCase();
-                            final desc = (r['description'] ?? '').toString().toLowerCase();
-                            return title.contains(query) || desc.contains(query);
-                          }).toList();
+                    final filteredReminders =
+                        query.isEmpty
+                            ? allReminders
+                            : allReminders.where((r) {
+                              final title =
+                                  (r['title'] ?? '').toString().toLowerCase();
+                              final desc =
+                                  (r['description'] ?? '')
+                                      .toString()
+                                      .toLowerCase();
+                              return title.contains(query) ||
+                                  desc.contains(query);
+                            }).toList();
+                    final allNotes = notesController.allNotes;
+                    final filteredNotes =
+                        query.isEmpty
+                            ? []
+                            : allNotes.where((note) {
+                              final title = note.title.toLowerCase();
+                              final content = note.content.toLowerCase();
+                              return title.contains(query) ||
+                                  content.contains(query);
+                            }).toList();
 
                     if (filteredReminders.isEmpty) {
                       return const Padding(
@@ -140,55 +166,98 @@ class HomeView extends GetView<HomeController> {
                     }
 
                     return Column(
-                      children: filteredReminders.map((reminder) {
-                        final color = reminder['color'] as Color? ?? Colors.blue;
-                        return Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 3))],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.notifications, color: Colors.white),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      reminder['title'] ?? 'Pengingat',
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                                    ),
+                      children:
+                          filteredReminders.map((reminder) {
+                            final color =
+                                reminder['color'] as Color? ?? Colors.blue;
+                            return Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '${reminder['date']}${reminder['time'] != null ? ' - ${reminder['time']}' : ''}',
-                                style: const TextStyle(color: Colors.white, fontSize: 14),
-                              ),
-                              if (reminder['description'] != null && reminder['description'].isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(
-                                    reminder['description'],
-                                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.notifications,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          reminder['title'] ?? 'Pengingat',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${reminder['date']}${reminder['time'] != null ? ' - ${reminder['time']}' : ''}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  if (reminder['description'] != null &&
+                                      reminder['description'].isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Text(
+                                        reminder['description'],
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 13,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
                     );
                   }),
 
                   const SizedBox(height: 24),
+
+                  // Statistik Folder
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Statistik Folder',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(height: 200, child: _buildFolderChart()),
+                      ],
+                    ),
+                  ),
+
+                  // Tombol Analytics
                   ElevatedButton.icon(
                     onPressed: _openAnalytics,
                     icon: const Icon(Icons.bar_chart),
@@ -196,8 +265,13 @@ class HomeView extends GetView<HomeController> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.yellow[700],
                       foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -219,14 +293,30 @@ class HomeView extends GetView<HomeController> {
         decoration: BoxDecoration(
           color: Colors.grey.shade200,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(note.title, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(
+              note.title,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             const SizedBox(height: 6),
-            Text(note.content, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
+            Text(
+              note.content,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
           ],
         ),
       ),
@@ -236,7 +326,8 @@ class HomeView extends GetView<HomeController> {
   Widget _buildFolderChart() {
     final folderMap = GetStorage().read<Map>('folders') ?? {};
     final folderNames = folderMap.keys.toList();
-    final folderCounts = folderMap.values.map((v) => (v as List).length).toList();
+    final folderCounts =
+        folderMap.values.map((v) => (v as List).length).toList();
 
     if (folderNames.isEmpty) {
       return const Center(child: Text('Belum ada data folder'));
@@ -259,7 +350,11 @@ class HomeView extends GetView<HomeController> {
         }),
         titlesData: FlTitlesData(
           leftTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: true, reservedSize: 28, interval: 1),
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              interval: 1,
+            ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -296,4 +391,3 @@ class HomeView extends GetView<HomeController> {
     }
   }
 }
- 

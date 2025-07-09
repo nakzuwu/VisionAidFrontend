@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 
 class ApiService {
   static const String baseUrl = 'https://visionaid.lolihunter.my.id/';
+  final GetStorage storage = GetStorage();
 
   static Future<Note?> fetchNote(String noteId) async {
     final response = await http.get(Uri.parse('$baseUrl/api/notes/$noteId'));
@@ -107,6 +108,8 @@ class ApiService {
     }
   }
 
+  
+
   Future<String?> uploadAudio(File file) async {
     final token = GetStorage().read('token');
     if (token == null) {
@@ -114,19 +117,67 @@ class ApiService {
       return null;
     }
 
-    final uri = Uri.parse('$baseUrl/api/transcribe');
-    final request =
-        http.MultipartRequest('POST', uri)
-          ..headers['Authorization'] = 'Bearer $token'
-          ..files.add(await http.MultipartFile.fromPath('file', file.path));
+    try {
+      Get.snackbar('Sedang Diproses', 'Audio sedang dikirim ke server...');
+      final uri = Uri.parse('$baseUrl/api/transcribe');
 
-    final response = await request.send();
-    if (response.statusCode == 200) {
-      final resStr = await response.stream.bytesToString();
-      return resStr;
-    } else {
-      Get.snackbar('Gagal', 'Status ${response.statusCode}');
+      final request =
+          http.MultipartRequest('POST', uri)
+            ..headers['Authorization'] = 'Bearer $token'
+            ..files.add(await http.MultipartFile.fromPath('file', file.path));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final resStr = await response.stream.bytesToString();
+        return resStr;
+      } else {
+        Get.snackbar('Gagal', 'Status kode: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Terjadi kesalahan: $e');
       return null;
+    }
+  }
+
+    Future<bool> syncNoteToServer(Note note) async {
+    final token = storage.read('token');
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/notes/sync'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(note.toJson()),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ Failed to sync note: $e');
+      return false;
+    }
+  }
+
+  Future<List<Note>> fetchAllNotesFromServer() async {
+    final token = storage.read('token');
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/notes/all'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => Note.fromJson(e)).toList();
+      } else {
+        print('❌ Failed to fetch notes: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('❌ Error fetching notes: $e');
+      return [];
     }
   }
 }
