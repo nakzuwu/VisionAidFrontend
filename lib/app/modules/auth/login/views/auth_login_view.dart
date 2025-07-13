@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vision_aid_app/app/data/services/api_service.dart';
 import 'package:vision_aid_app/app/data/services/auth_service.dart';
-import '../controllers/auth_login_controller.dart'; // sesuaikan path-nya
+import '../controllers/auth_login_controller.dart';
+import 'package:get_storage/get_storage.dart';
 
 class LoginView extends StatelessWidget {
-  final controller = Get.put(LoginController());
+  late final LoginController controller;
 
-  LoginView({super.key});
+  LoginView({super.key}) {
+    if (Get.isRegistered<LoginController>()) {
+      Get.delete<LoginController>();
+    }
+    controller = Get.put(LoginController());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +27,6 @@ class LoginView extends StatelessWidget {
             children: [
               Image.asset('assets/logo.png', height: 120),
               const SizedBox(height: 24),
-
-              // Card
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -112,21 +117,55 @@ class LoginView extends StatelessWidget {
               ),
               ElevatedButton.icon(
                 onPressed: () async {
+                  final box = GetStorage();
+                  await box.erase();
                   final result =
                       await Get.find<AuthService>().loginWithGoogle();
                   if (result['success']) {
-                    Get.snackbar("Berhasil", "Login Google berhasil");
+                    final token = result['token'];
+                    final user = result['user'];
+
+                    box.write('token', token);
+                    box.write('username', user['username']);
+                    box.write('email', user['email']);
+                    box.write('api_key', user['api_key']);
+                    
+                    final notes = await ApiService.fetchAllNotes();
+
+                    for (final note in notes) {
+                      box.write(note.id, note.toJson());
+
+                      final folders = box.read('folders') ?? {};
+                      if (!folders.containsKey(note.folder)) {
+                        folders[note.folder] = [];
+                      }
+                      final List<dynamic> folderNotes = folders[note.folder];
+                      if (!folderNotes.contains(note.id)) {
+                        folderNotes.add(note.id);
+                      }
+                      box.write('folders', folders);
+                    }
+
+                    // ✅ Navigasi ke halaman home
+                    Get.offAllNamed('/home');
+
+                    // Opsional: Notifikasi
+                    Get.snackbar(
+                      "Berhasil",
+                      "Login Google berhasil",
+                      snackPosition: SnackPosition.BOTTOM,
+                    );
                   } else {
                     Get.snackbar(
                       "Gagal",
                       result['message'] ?? 'Terjadi kesalahan',
+                      snackPosition: SnackPosition.BOTTOM,
+                      backgroundColor: Colors.redAccent,
+                      colorText: Colors.white,
                     );
                   }
                 },
-                icon: Image.asset(
-                  'assets/google_icon.png',
-                  height: 24,
-                ), // pastikan ikon tersedia
+                icon: Image.asset('assets/google_icon.png', height: 24),
                 label: const Text('Login dengan Google'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,

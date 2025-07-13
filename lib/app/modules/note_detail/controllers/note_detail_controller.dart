@@ -12,10 +12,9 @@ import 'package:vision_aid_app/app/data/model/note_model.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:vision_aid_app/app/data/services/api_service.dart';
 import 'package:vision_aid_app/app/modules/folder/controllers/folder_controller.dart';
-import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:vision_aid_app/app/modules/home/controllers/home_controller.dart';
 
 class NoteDetailController extends GetxController {
   final TextEditingController textController = TextEditingController();
@@ -32,20 +31,129 @@ class NoteDetailController extends GetxController {
   final TextEditingController summaryController = TextEditingController();
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   String? noteId;
-  NoteDetailController({this.noteId});
+  bool isNewNote = false;
 
   @override
   void onInit() {
     super.onInit();
+    _resetControllerState();
+
+    final dynamic args = Get.arguments;
+    noteId = _parseNoteId(args);
+
+    if (noteId != null && noteId!.isNotEmpty) {
+      loadNote();
+    } else {
+      isNewNote = true;
+    }
+
     _checkConnectivity();
     Connectivity().onConnectivityChanged.listen((result) {
       isOnline.value = result != ConnectivityResult.none;
       if (isOnline.value) _syncNotes();
     });
+  }
 
-    if (noteId != null) {
-      loadNote();
+  String? _parseNoteId(dynamic args) {
+    if (args == null) return null;
+    if (args is String) return args;
+    if (args is Map) return args['noteId']?.toString();
+    return null;
+  }
+
+  void _resetControllerState() {
+    textController.clear();
+    images.clear();
+    remoteImages.clear();
+    selectedFolder.value = 'Default';
+    currentIndex.value = 0;
+  }
+
+  void saveNoteLocally() {
+    if (noteId == null || noteId!.isEmpty) {
+      noteId = uuid.v4();
     }
+
+    final String id = noteId!;
+
+    if (textController.text.trim().isEmpty && images.isEmpty) {
+      return;
+    }
+
+    final note = Note(
+      id: id,
+      title: _getNoteTitle(),
+      content: textController.text,
+      folder: selectedFolder.value,
+      createdAt:
+          (storage.read(id)?['created_at'] != null)
+              ? DateTime.parse(storage.read(id)['created_at'])
+              : DateTime.now(),
+      updatedAt: DateTime.now(),
+      images: [...images, ...remoteImages],
+      isSynced: false,
+      lastOpened: DateTime.now(),
+    );
+
+    storage.write(id, note.toJson());
+
+    final folders = storage.read('folders') ?? {};
+    if (!folders.containsKey(note.folder)) {
+      folders[note.folder] = [];
+    }
+
+    final List<dynamic> folderNotes = folders[note.folder];
+    if (!folderNotes.contains(id)) {
+      folderNotes.add(id);
+    }
+
+    storage.write('folders', folders);
+
+    final existingIndex = notes.indexWhere((n) => n.id == id);
+    if (existingIndex != -1) {
+      notes[existingIndex] = note;
+    } else {
+      notes.add(note);
+    }
+
+    // Sync
+    if (isOnline.value) {
+      _syncNoteToServer(note);
+    }
+
+    Get.snackbar('Saved', 'Note saved to ${note.folder}');
+
+    if (Get.isRegistered<FolderController>()) {
+      final folderController = Get.find<FolderController>();
+      folderController.refreshFolders();
+    }
+
+    // Untuk catatan baru, navigasi ulang dengan ID baru
+    if (isNewNote) {
+      isNewNote = false;
+      Get.offNamed(
+        Get.currentRoute,
+        arguments: id, // Gunakan id yang non-nullable
+        preventDuplicates: false,
+      );
+    }
+  }
+
+  var allNotes = <Note>[].obs;
+
+  void loadAllNotes() {
+    final keys = GetStorage().getKeys();
+    allNotes.value =
+        keys
+            .map((key) {
+              final raw = GetStorage().read(key);
+              if (raw is Map) {
+                return Note.fromMap(Map<String, dynamic>.from(raw));
+              }
+              return null;
+            })
+            .whereType<Note>()
+            .toList();
   }
 
   void _checkConnectivity() async {
@@ -54,17 +162,27 @@ class NoteDetailController extends GetxController {
   }
 
   void loadNote() {
-    final noteData = storage.read(noteId!);
+    if (noteId == null || noteId!.isEmpty) return;
+
+    // Gunakan variabel non-nullable
+    final String id = noteId!;
+
+    final noteData = storage.read(id);
     if (noteData != null) {
       final note = Note.fromJson(noteData);
-
-      // 🟡 Update waktu terakhir dibuka
       final updated = note.copyWith(lastOpened: DateTime.now());
       storage.write(note.id, updated.toJson());
-
       _populateNote(updated);
+      _refreshHomeRecentNotes();
     } else {
       Get.snackbar('Error', 'Note tidak ditemukan');
+    }
+  }
+
+  void _refreshHomeRecentNotes() {
+    if (Get.isRegistered<HomeController>()) {
+      final homeController = Get.find<HomeController>();
+      homeController.refreshRecentNotes();
     }
   }
 
@@ -85,36 +203,75 @@ class NoteDetailController extends GetxController {
     }
   }
 
-  Future<void> fetchNoteFromServer() async {
-    if (!isOnline.value) return;
+  // Future<void> fetchNoteFromServer() async {
+  //   if (noteId == null || !isOnline.value) return;
 
-    try {
-      isLoading.value = true;
-      final note = await ApiService.fetchNote(noteId!);
-      if (note != null) {
-        _populateNote(note);
-        saveNoteLocally(); // Save after fetching
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to load note from server');
-    } finally {
-      isLoading.value = false;
-    }
-  }
+  //   // Gunakan variabel non-nullable
+  //   final String id = noteId!;
+
+  //   try {
+  //     isLoading.value = true;
+  //     final note = await ApiService.fetchNote(id);
+
+  //     if (note != null) {
+  //       _populateNote(note);
+  //       saveNoteLocally(); // Save after fetching
+  //     }
+  //   } catch (e) {
+  //     Get.snackbar('Error', 'Failed to load note from server');
+  //   } finally {
+  //     isLoading.value = false;
+  //   }
+  // }
 
   Future<void> _syncNoteToServer(Note note) async {
     try {
       final success = await ApiService.syncNote(note);
-      if (success) {
-        final updatedNote = note.copyWith(isSynced: true);
-        storage.write(updatedNote.id, updatedNote.toJson());
+      if (!success) {
+        Get.snackbar('Sync Gagal', 'Gagal sinkron ke server');
+        return;
+      }
 
-        for (final imagePath in images) {
+      final updatedNote = note.copyWith(isSynced: true);
+      storage.write(updatedNote.id, updatedNote.toJson());
+
+      for (final imagePath in note.images) {
+        if (imagePath.startsWith('/')) {
           await _uploadImage(updatedNote.id, imagePath);
         }
       }
+
+      Get.snackbar('Sinkron Berhasil', 'Catatan disimpan di server');
     } catch (e) {
-      Get.snackbar('Sync Error', 'Failed to sync note to server');
+      Get.snackbar('Sync Error', 'Gagal sync ke server: $e');
+    }
+  }
+
+  Future<void> fetchNotesFromCloud() async {
+    if (!isOnline.value) return;
+
+    try {
+      isLoading.value = true;
+      final notesData = await ApiService.fetchAllNotes();
+
+      for (var item in notesData) {
+        final note = item;
+
+        // Simpan ke storage
+        storage.write(note.id, note.toJson());
+
+        // Update list
+        final index = notes.indexWhere((n) => n.id == note.id);
+        if (index == -1) {
+          notes.add(note);
+        } else {
+          notes[index] = note;
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengambil catatan dari server');
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -135,8 +292,6 @@ class NoteDetailController extends GetxController {
     }
   }
 
-  final apiService = ApiService();
-
   Future<String?> summarizeText(String text) async {
     final response = await ApiService().summarizeText(text);
     if (response != null && response['summary'] != null) {
@@ -154,7 +309,8 @@ class NoteDetailController extends GetxController {
   }
 
   Future<void> _syncNotes() async {
-    final unsyncedNotes = notes.where((note) => !note.isSynced).toList();
+    loadAllNotes();
+    final unsyncedNotes = allNotes.where((note) => !note.isSynced).toList();
     for (final note in unsyncedNotes) {
       await _syncNoteToServer(note);
     }
@@ -183,7 +339,6 @@ class NoteDetailController extends GetxController {
         extentOffset: selection.start + formattedText.length,
       );
     } else {
-      // Insert bold markers at cursor position
       textController.text = text.replaceRange(
         selection.start,
         selection.start,
@@ -193,69 +348,6 @@ class NoteDetailController extends GetxController {
         baseOffset: selection.start + 1,
         extentOffset: selection.start + 1,
       );
-    }
-  }
-
-  void saveNoteLocally() {
-    final id = noteId ?? uuid.v4();
-
-    if (noteId == null) {
-      noteId = id; // langsung set ke instansi controller aktif
-    }
-    if (textController.text.trim().isEmpty && images.isEmpty) {
-      return; // tidak menyimpan catatan kosong
-    }
-
-    final note = Note(
-      id: id,
-      title: _getNoteTitle(),
-      content: textController.text,
-      folder: selectedFolder.value,
-      createdAt:
-          (storage.read(id)?['created_at'] != null)
-              ? DateTime.parse(storage.read(id)['created_at'])
-              : DateTime.now(),
-      updatedAt: DateTime.now(),
-      images: [...images, ...remoteImages],
-      isSynced: false,
-      lastOpened: DateTime.now(),
-    );
-
-    storage.write(id, note.toJson());
-
-    // Update folder
-    final folders = storage.read('folders') ?? {};
-    if (!folders.containsKey(note.folder)) {
-      folders[note.folder] = [];
-    }
-
-    final List<dynamic> folderNotes = folders[note.folder];
-    if (!folderNotes.contains(id)) {
-      folderNotes.add(id);
-    }
-
-    storage.write('folders', folders);
-
-    // Update local list
-    final existingIndex = notes.indexWhere((n) => n.id == id);
-    if (existingIndex != -1) {
-      notes[existingIndex] = note;
-    } else {
-      notes.add(note);
-    }
-
-    // Sync
-    if (isOnline.value) {
-      _syncNoteToServer(note);
-    }
-
-    Get.snackbar('Saved', 'Note saved to ${note.folder}');
-
-    if (Get.isRegistered<FolderController>()) {
-      final folderController = Get.find<FolderController>();
-      final updatedFolders = storage.read('folders') ?? {};
-      folderController.folders.assignAll(updatedFolders);
-      folderController.folders.refresh();
     }
   }
 
@@ -328,7 +420,6 @@ class NoteDetailController extends GetxController {
     final currentLine = text.substring(currentLineStart, selection.start);
 
     if (currentLine.isEmpty || currentLine.startsWith(RegExp(r'\d+\.\s'))) {
-      // Already a list item or empty line
       final listItem = '1. ';
       textController.text = text.replaceRange(
         selection.start,
@@ -340,7 +431,6 @@ class NoteDetailController extends GetxController {
         extentOffset: selection.start + listItem.length,
       );
     } else {
-      // Insert new list item
       final listItem = '\n1. ';
       textController.text = text.replaceRange(
         selection.start,
@@ -374,45 +464,35 @@ class NoteDetailController extends GetxController {
 
   @override
   void onClose() {
+    saveNoteLocally();
     textController.dispose();
     summaryController.dispose();
+    _refreshHomeRecentNotes();
+
+    if (_recorder.isRecording) {
+      _recorder.stopRecorder();
+    }
+
+    Get.delete<NoteDetailController>(force: true);
     super.onClose();
-  }
-
-  var allNotes = <Note>[].obs;
-
-  void loadAllNotes() {
-    final keys = GetStorage().getKeys();
-    allNotes.value =
-        keys
-            .map((key) {
-              final raw = GetStorage().read(key);
-              if (raw is Map) {
-                return Note.fromMap(Map<String, dynamic>.from(raw));
-              }
-
-              return null;
-            })
-            .whereType<Note>()
-            .toList();
   }
 
   void changeTab(int index) {
     currentIndex.value = index;
     switch (index) {
-      case 0: // Bold
+      case 0:
         applyBoldFormat();
         break;
-      case 1: // Italic
+      case 1:
         applyItalicFormat();
         break;
-      case 2: // Strikethrough
+      case 2:
         applyStrikethroughFormat();
         break;
-      case 3: // Numbered List
+      case 3:
         addNumberedList();
         break;
-      case 4: // Image
+      case 4:
         pickImage();
         break;
     }
@@ -430,7 +510,6 @@ class NoteDetailController extends GetxController {
       final imagePath = pickedFile.path;
       images.add(imagePath);
 
-      // Insert image marker
       final selection = textController.selection;
       final text = textController.text;
       textController.text =
@@ -499,8 +578,8 @@ class NoteDetailController extends GetxController {
         return;
       }
 
-      final response = await apiService.uploadOCRImage(imageFile, apiKey);
-      Get.back(); // Tutup loading
+      final response = await ApiService().uploadOCRImage(imageFile, apiKey);
+      Get.back();
 
       if (response == null || response['text'] == null) {
         Get.snackbar('Gagal', 'Gagal memproses OCR');
@@ -508,9 +587,7 @@ class NoteDetailController extends GetxController {
       }
 
       final extractedText = response['text'];
-      final controller = TextEditingController(
-        text: extractedText,
-      ); // baru setiap kali
+      final controller = TextEditingController(text: extractedText);
 
       Get.defaultDialog(
         title: 'Hasil OCR',
@@ -550,7 +627,7 @@ class NoteDetailController extends GetxController {
                     offset: safeStart + ocrText.length + 2,
                   );
 
-                  Get.back(); // Tutup dialog
+                  Get.back();
                 },
                 child: const Text('Gunakan Hasil'),
               ),
@@ -606,12 +683,8 @@ class NoteDetailController extends GetxController {
     }
 
     await _recorder.openRecorder();
-    await _recorder.startRecorder(
-      toFile: path,
-      codec: Codec.pcm16WAV, // penting agar file tidak corrupt
-    );
+    await _recorder.startRecorder(toFile: path, codec: Codec.pcm16WAV);
 
-    // Tampilkan dialog permanen dengan tombol STOP
     Get.dialog(
       AlertDialog(
         title: const Text('Merekam Audio'),
@@ -621,7 +694,7 @@ class NoteDetailController extends GetxController {
             onPressed: () async {
               await _recorder.stopRecorder();
               await _recorder.closeRecorder();
-              Get.back(); // tutup dialog
+              Get.back();
               await _uploadAndShow(File(path));
             },
             child: const Text('Stop'),

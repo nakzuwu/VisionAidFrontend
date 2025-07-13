@@ -11,20 +11,17 @@ class NoteDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final noteId = Get.arguments as String?;
     final controller = Get.put(
-      NoteDetailController(noteId: noteId),
-      tag: noteId,
+      NoteDetailController(), 
+      tag: noteId?.toString(), 
     );
     final noteController = Get.find<NoteDetailController>(tag: noteId);
-    // Dalam NoteDetailView, misalnya di initState atau onInit controller:
     final id = Get.arguments;
     final recent = GetStorage().read<List>('recent_notes') ?? [];
 
     if (id != null) {
-      // Hapus jika sudah ada, lalu tambah di depan
       recent.remove(id);
       recent.insert(0, id);
 
-      // Simpan hanya 3 terakhir
       if (recent.length > 3) recent.removeRange(3, recent.length);
 
       GetStorage().write('recent_notes', recent);

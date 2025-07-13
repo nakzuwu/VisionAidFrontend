@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:vision_aid_app/app/data/services/api_service.dart';
 import 'package:vision_aid_app/app/modules/note_detail/views/note_detail_view.dart';
 import 'package:vision_aid_app/app/routes/app_pages.dart';
 import 'package:vision_aid_app/app/widgets/bottom_nav_bar.dart';
@@ -34,7 +35,6 @@ class FolderView extends GetView<FolderController> {
       ),
     );
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +228,8 @@ class FolderView extends GetView<FolderController> {
                                       textCancel: 'Batal',
                                       textConfirm: 'Hapus',
                                       confirmTextColor: Colors.white,
-                                      onConfirm: () {
+                                      onConfirm: () async {
+                                        // 1. Hapus lokal
                                         storage.remove(noteId);
                                         controller.folders[folderName]?.remove(
                                           noteId,
@@ -244,6 +245,21 @@ class FolderView extends GetView<FolderController> {
                                         );
                                         controller.folders.refresh();
                                         Get.back();
+
+                                        // 2. Hapus di server (soft delete)
+                                        final success =
+                                            await ApiService.deleteNote(noteId);
+                                        if (success) {
+                                          Get.snackbar(
+                                            'Berhasil',
+                                            'Catatan dihapus dari server',
+                                          );
+                                        } else {
+                                          Get.snackbar(
+                                            'Gagal',
+                                            'Gagal menghapus catatan dari server',
+                                          );
+                                        }
                                       },
                                     );
                                   },

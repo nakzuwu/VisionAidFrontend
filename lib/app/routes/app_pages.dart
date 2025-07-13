@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:vision_aid_app/app/modules/note_detail/controllers/note_detail_controller.dart';
 
 import '../modules/app_settings/bindings/app_settings_binding.dart';
 import '../modules/app_settings/views/app_settings_view.dart';
@@ -73,7 +74,9 @@ class AppPages {
     GetPage(
       name: _Paths.NOTE_DETAIL,
       page: () => NoteDetailView(),
-      binding: NoteDetailBinding(),
+      binding: BindingsBuilder(() {
+        Get.create<NoteDetailController>(() => NoteDetailController());
+      }),
     ),
     GetPage(
       name: _Paths.USER_PROFILE,

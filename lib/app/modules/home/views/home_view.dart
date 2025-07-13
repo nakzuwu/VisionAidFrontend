@@ -32,7 +32,14 @@ class HomeView extends GetView<HomeController> {
       bottomNavigationBar: BottomNavBar(currentIndex: 0),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.yellow[700],
-        onPressed: () => Get.toNamed(Routes.NOTE_DETAIL),
+        onPressed: () {
+          // Tutup semua dialog atau bottom sheet yang mungkin terbuka
+          if (Get.isDialogOpen == true) Get.back();
+          if (Get.isBottomSheetOpen == true) Get.back();
+
+          // Navigasi ke halaman baru tanpa argumen
+          Get.toNamed(Routes.NOTE_DETAIL);
+        },
         child: const Icon(Icons.add),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -97,8 +104,12 @@ class HomeView extends GetView<HomeController> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                   Obx(() {
+                    // Gunakan Get.find untuk mendapatkan controller yang benar
+                    final controller = Get.find<NoteDetailController>();
+
+                    // Gunakan controller.allNotes.value
                     final notes =
-                        notesController.allNotes
+                        controller.allNotes.value
                             .where((note) => note.lastOpened != null)
                             .toList()
                           ..sort(
@@ -283,41 +294,64 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _buildNoteCard(Note note) {
-    return InkWell(
-      onTap: () => Get.toNamed(Routes.NOTE_DETAIL, arguments: note.id),
-      child: Container(
-        width: 180,
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+  Widget _buildRecentNotesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Terakhir Dilihat',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              note.title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+        Obx(() {
+          if (controller.recentNotes.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text('Belum ada catatan yang dibuka.'),
+            );
+          }
+
+          return SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: controller.recentNotes.length,
+              itemBuilder:
+                  (_, index) => _buildNoteCard(controller.recentNotes[index]),
             ),
-            const SizedBox(height: 6),
-            Text(
-              note.content,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildNoteCard(Note note) {
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed(Routes.NOTE_DETAIL, arguments: note.id);
+      },
+      child: Container(
+        width: 200,
+        margin: const EdgeInsets.only(right: 10),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  note.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  note.content.length > 50
+                      ? '${note.content.substring(0, 50)}...'
+                      : note.content,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

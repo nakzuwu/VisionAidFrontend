@@ -40,7 +40,7 @@ class AuthService extends GetxService {
       );
 
       final data = jsonDecode(response.body);
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return data;
       } else {
         throw Exception(data['msg']);
@@ -172,47 +172,64 @@ class AuthService extends GetxService {
   }
 
   String? get token => box.read<String>('token');
-
   Future<Map<String, dynamic>> loginWithGoogle() async {
     try {
+      // ✅ Pastikan selalu muncul pemilihan akun Google
+      await _googleSignIn.signOut();
+
+      // Step 1: Munculkan popup login akun Google
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        return {'success': false, 'message': 'Login dibatalkan pengguna'};
+        return {'success': false, 'message': 'Login dibatalkan oleh pengguna'};
       }
 
+      // Step 2: Ambil token Google Auth
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
+      // Step 3: Buat credential dari Google token
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
+      // Step 4: Login ke Firebase pakai credential tersebut
       final UserCredential userCredential = await _auth.signInWithCredential(
         credential,
       );
 
-      final idToken = await userCredential.user?.getIdToken();
+      // Step 5: Ambil ID Token dari Firebase user
+      final String? idToken = await userCredential.user?.getIdToken();
 
-      print("=== Google Login Debug ===");
-      print("ID Token: $idToken");
-      print("URL: $baseUrl/oauth/login");
-      print("===========================");
+      if (idToken == null) {
+        return {
+          'success': false,
+          'message': 'Gagal mengambil ID Token dari Firebase',
+        };
+      }
 
+      // Step 6: Kirim token ke backend kamu untuk diverifikasi
       final response = await http.post(
         Uri.parse('$baseUrl/oauth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'id_token': idToken}),
       );
 
-      final data = jsonDecode(response.body);
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
         return {'success': true, 'token': data['token'], 'user': data['user']};
       } else {
-        return {'success': false, 'message': data['msg']};
+        return {
+          'success': false,
+          'message': data['msg'] ?? 'Login Google gagal',
+        };
       }
     } catch (e) {
-      return {'success': false, 'message': e.toString()};
+      return {
+        'success': false,
+        'message': 'Terjadi kesalahan: ${e.toString()}',
+      };
     }
   }
 
