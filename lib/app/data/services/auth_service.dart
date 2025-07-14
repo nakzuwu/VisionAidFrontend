@@ -87,7 +87,7 @@ class AuthService extends GetxService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      await box.write('token', data['token']); // ✅ simpan token
+      await box.write('token', data['token']);
       return data;
     } else {
       throw Exception(data['msg'] ?? 'Login gagal');
@@ -135,12 +135,10 @@ class AuthService extends GetxService {
 
   Future<void> logoutUser() async {
     final token = box.read("token");
-
-    // Tetap hapus data lokal walau token invalid
+    
     Future<void> cleanLogout() async {
       await box.remove("token");
       await box.remove("username");
-      // Hapus data lain jika ada (misal: API key)
       Get.offAllNamed(Routes.AUTH_LOGIN);
     }
 
@@ -174,31 +172,25 @@ class AuthService extends GetxService {
   String? get token => box.read<String>('token');
   Future<Map<String, dynamic>> loginWithGoogle() async {
     try {
-      // ✅ Pastikan selalu muncul pemilihan akun Google
       await _googleSignIn.signOut();
 
-      // Step 1: Munculkan popup login akun Google
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         return {'success': false, 'message': 'Login dibatalkan oleh pengguna'};
       }
 
-      // Step 2: Ambil token Google Auth
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      // Step 3: Buat credential dari Google token
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Step 4: Login ke Firebase pakai credential tersebut
       final UserCredential userCredential = await _auth.signInWithCredential(
         credential,
       );
 
-      // Step 5: Ambil ID Token dari Firebase user
       final String? idToken = await userCredential.user?.getIdToken();
 
       if (idToken == null) {
@@ -208,7 +200,6 @@ class AuthService extends GetxService {
         };
       }
 
-      // Step 6: Kirim token ke backend kamu untuk diverifikasi
       final response = await http.post(
         Uri.parse('$baseUrl/oauth/login'),
         headers: {'Content-Type': 'application/json'},
@@ -262,7 +253,7 @@ class AuthService extends GetxService {
     }
 
     Get.snackbar('Gagal', 'Gagal mengubah username');
-    return false; // <= wajib ditambahkan agar return selalu ada
+    return false; 
   }
 
   Future<bool> updatePassword(String oldPassword, String newPassword) async {

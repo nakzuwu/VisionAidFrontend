@@ -229,7 +229,6 @@ class FolderView extends GetView<FolderController> {
                                       textConfirm: 'Hapus',
                                       confirmTextColor: Colors.white,
                                       onConfirm: () async {
-                                        // 1. Hapus lokal
                                         storage.remove(noteId);
                                         controller.folders[folderName]?.remove(
                                           noteId,
@@ -246,7 +245,6 @@ class FolderView extends GetView<FolderController> {
                                         controller.folders.refresh();
                                         Get.back();
 
-                                        // 2. Hapus di server (soft delete)
                                         final success =
                                             await ApiService.deleteNote(noteId);
                                         if (success) {

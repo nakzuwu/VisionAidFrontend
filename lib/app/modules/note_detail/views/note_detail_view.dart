@@ -49,7 +49,7 @@ class NoteDetailView extends StatelessWidget {
               );
 
               final summary = await controller.summarizeText(fullText);
-              Get.back(); // Tutup loading dialog
+              Get.back(); 
 
               if (summary == null) {
                 Get.snackbar('Gagal', 'Gagal merangkum catatan');
@@ -75,7 +75,7 @@ class NoteDetailView extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {
                         controller.textController.text = summaryController.text;
-                        Get.back(); // Tutup dialog
+                        Get.back(); 
                       },
                       child: const Text('Gunakan Ringkasan'),
                     ),
@@ -119,7 +119,7 @@ class NoteDetailView extends StatelessWidget {
                           controller.selectedFolder.value,
                         )
                         ? controller.selectedFolder.value
-                        : null, // Hindari error jika nilainya tidak cocok
+                        : null, 
                 onChanged: (value) {
                   if (value != null) {
                     controller.selectedFolder.value = value;

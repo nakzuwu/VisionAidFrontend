@@ -25,39 +25,41 @@ class CalendarView extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            Obx(() => TableCalendar(
-                  focusedDay: controller.focusedDay.value,
-                  firstDay: DateTime(2020),
-                  lastDay: DateTime(2030),
-                  selectedDayPredicate: (day) =>
-                      isSameDay(controller.selectedDay.value, day),
-                  onDaySelected: (selected, focused) {
-                    controller.onDaySelected(selected, focused);
-                    _showDayOptions(context, selected);
-                  },
-                  eventLoader: (day) => controller.getEventsForDay(day),
-                  calendarFormat: CalendarFormat.month,
-                  calendarStyle: CalendarStyle(
-                    todayDecoration: BoxDecoration(
-                      color: Colors.orange,
-                      shape: BoxShape.circle,
-                    ),
-                    selectedDecoration: BoxDecoration(
-                      color: Colors.blue,
-                      shape: BoxShape.circle,
-                    ),
-                    markerDecoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    markersAutoAligned: true,
-                    markerSize: 6,
+            Obx(
+              () => TableCalendar(
+                focusedDay: controller.focusedDay.value,
+                firstDay: DateTime(2020),
+                lastDay: DateTime(2030),
+                selectedDayPredicate:
+                    (day) => isSameDay(controller.selectedDay.value, day),
+                onDaySelected: (selected, focused) {
+                  controller.onDaySelected(selected, focused);
+                  _showDayOptions(context, selected);
+                },
+                eventLoader: (day) => controller.getEventsForDay(day),
+                calendarFormat: CalendarFormat.month,
+                calendarStyle: CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
                   ),
-                  headerStyle: HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
+                  selectedDecoration: BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
                   ),
-                )),
+                  markerDecoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  markersAutoAligned: true,
+                  markerSize: 6,
+                ),
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             Expanded(child: Obx(() => _buildEventsList())),
           ],
@@ -109,16 +111,17 @@ class CalendarView extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            subtitle: event['description'] != null &&
-                    event['description'].toString().isNotEmpty
-                ? Text(
-                    event['description'],
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 14,
-                    ),
-                  )
-                : null,
+            subtitle:
+                event['description'] != null &&
+                        event['description'].toString().isNotEmpty
+                    ? Text(
+                      event['description'],
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                      ),
+                    )
+                    : null,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -139,28 +142,29 @@ class CalendarView extends StatelessWidget {
                       _confirmDeleteEvent(event['id']);
                     }
                   },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, color: Colors.blue),
-                          SizedBox(width: 8),
-                          Text('Edit'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Delete'),
-                        ],
-                      ),
-                    ),
-                  ],
+                  itemBuilder:
+                      (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit, color: Colors.blue),
+                              SizedBox(width: 8),
+                              Text('Edit'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Delete'),
+                            ],
+                          ),
+                        ),
+                      ],
                 ),
               ],
             ),
@@ -300,7 +304,9 @@ class CalendarView extends StatelessWidget {
   void _showEditReminderDialog(Map<String, dynamic> event) {
     final day = event['day'] as DateTime;
     final titleController = TextEditingController(text: event['title']);
-    final descriptionController = TextEditingController(text: event['description']);
+    final descriptionController = TextEditingController(
+      text: event['description'],
+    );
     final timeController = TextEditingController(text: event['time']);
     final selectedColor = (event['color'] as Color).obs;
 
@@ -347,15 +353,17 @@ class CalendarView extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text('Select Color:'),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildColorOption(Colors.blue, selectedColor),
-                  _buildColorOption(Colors.red, selectedColor),
-                  _buildColorOption(Colors.green, selectedColor),
-                  _buildColorOption(Colors.purple, selectedColor),
-                  _buildColorOption(Colors.orange, selectedColor),
-                ],
+              Obx(
+                () => Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildColorOption(Colors.blue, selectedColor),
+                    _buildColorOption(Colors.red, selectedColor),
+                    _buildColorOption(Colors.green, selectedColor),
+                    _buildColorOption(Colors.purple, selectedColor),
+                    _buildColorOption(Colors.orange, selectedColor),
+                  ],
+                ),
               ),
             ],
           ),
@@ -395,9 +403,10 @@ class CalendarView extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
-          border: selectedColor.value == color
-              ? Border.all(color: Colors.black, width: 2)
-              : null,
+          border:
+              selectedColor.value == color
+                  ? Border.all(color: Colors.black, width: 2)
+                  : null,
         ),
       ),
     );

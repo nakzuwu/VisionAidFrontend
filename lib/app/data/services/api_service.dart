@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:vision_aid_app/app/data/model/note_model.dart';
+import 'package:vision_aid_app/app/data/model/reminder_model.dart';
 import 'package:get/get.dart';
 
 class ApiService {
@@ -46,6 +47,50 @@ class ApiService {
 
     final response = await http.post(
       Uri.parse('$baseUrl/api/notes/$noteId/delete'),
+      headers: {'Authorization': 'Bearer $jwt'},
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<List<Reminder>> fetchAllReminders() async {
+    final jwt = GetStorage().read('token');
+    if (jwt == null) return [];
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/reminders/all'),
+      headers: {'Authorization': 'Bearer $jwt'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Reminder.fromJson(json)).toList();
+    }
+    return [];
+  }
+
+  static Future<bool> syncReminder(Reminder reminder) async {
+    final jwt = GetStorage().read('token');
+    if (jwt == null) return false;
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/reminders/sync'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwt',
+      },
+      body: jsonEncode(reminder.toJson()),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> deleteReminder(String reminderId) async {
+    final jwt = GetStorage().read('token');
+    if (jwt == null) return false;
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/reminders/$reminderId/delete'),
       headers: {'Authorization': 'Bearer $jwt'},
     );
 

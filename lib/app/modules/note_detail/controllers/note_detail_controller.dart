@@ -80,6 +80,8 @@ class NoteDetailController extends GetxController {
       return;
     }
 
+    final now = DateTime.now();
+
     final note = Note(
       id: id,
       title: _getNoteTitle(),
@@ -88,11 +90,11 @@ class NoteDetailController extends GetxController {
       createdAt:
           (storage.read(id)?['created_at'] != null)
               ? DateTime.parse(storage.read(id)['created_at'])
-              : DateTime.now(),
-      updatedAt: DateTime.now(),
+              : now,
+      updatedAt: now,
       images: [...images, ...remoteImages],
       isSynced: false,
-      lastOpened: DateTime.now(),
+      lastOpened: now, 
     );
 
     storage.write(id, note.toJson());
@@ -108,34 +110,31 @@ class NoteDetailController extends GetxController {
     }
 
     storage.write('folders', folders);
-
     final existingIndex = notes.indexWhere((n) => n.id == id);
     if (existingIndex != -1) {
       notes[existingIndex] = note;
     } else {
       notes.add(note);
     }
+    if (Get.isRegistered<HomeController>()) {
+      final homeController = Get.find<HomeController>();
+      homeController.refreshRecentNotes();
+    }
 
-    // Sync
     if (isOnline.value) {
       _syncNoteToServer(note);
     }
 
-    Get.snackbar('Saved', 'Note saved to ${note.folder}');
+    // Get.snackbar('Saved', 'Note saved to ${note.folder}');
 
     if (Get.isRegistered<FolderController>()) {
       final folderController = Get.find<FolderController>();
       folderController.refreshFolders();
     }
 
-    // Untuk catatan baru, navigasi ulang dengan ID baru
     if (isNewNote) {
       isNewNote = false;
-      Get.offNamed(
-        Get.currentRoute,
-        arguments: id, // Gunakan id yang non-nullable
-        preventDuplicates: false,
-      );
+      Get.offNamed(Get.currentRoute, arguments: id, preventDuplicates: false);
     }
   }
 
@@ -164,14 +163,14 @@ class NoteDetailController extends GetxController {
   void loadNote() {
     if (noteId == null || noteId!.isEmpty) return;
 
-    // Gunakan variabel non-nullable
     final String id = noteId!;
-
     final noteData = storage.read(id);
+
     if (noteData != null) {
       final note = Note.fromJson(noteData);
       final updated = note.copyWith(lastOpened: DateTime.now());
       storage.write(note.id, updated.toJson());
+
       _populateNote(updated);
       _refreshHomeRecentNotes();
     } else {
@@ -179,9 +178,11 @@ class NoteDetailController extends GetxController {
     }
   }
 
-  void _refreshHomeRecentNotes() {
+  void _refreshHomeRecentNotes() async {
     if (Get.isRegistered<HomeController>()) {
       final homeController = Get.find<HomeController>();
+      await Future.delayed(const Duration(milliseconds: 300));
+
       homeController.refreshRecentNotes();
     }
   }
@@ -203,27 +204,6 @@ class NoteDetailController extends GetxController {
     }
   }
 
-  // Future<void> fetchNoteFromServer() async {
-  //   if (noteId == null || !isOnline.value) return;
-
-  //   // Gunakan variabel non-nullable
-  //   final String id = noteId!;
-
-  //   try {
-  //     isLoading.value = true;
-  //     final note = await ApiService.fetchNote(id);
-
-  //     if (note != null) {
-  //       _populateNote(note);
-  //       saveNoteLocally(); // Save after fetching
-  //     }
-  //   } catch (e) {
-  //     Get.snackbar('Error', 'Failed to load note from server');
-  //   } finally {
-  //     isLoading.value = false;
-  //   }
-  // }
-
   Future<void> _syncNoteToServer(Note note) async {
     try {
       final success = await ApiService.syncNote(note);
@@ -241,7 +221,7 @@ class NoteDetailController extends GetxController {
         }
       }
 
-      Get.snackbar('Sinkron Berhasil', 'Catatan disimpan di server');
+      // Get.snackbar('Sinkron Berhasil', 'Catatan disimpan di server');
     } catch (e) {
       Get.snackbar('Sync Error', 'Gagal sync ke server: $e');
     }
@@ -257,10 +237,8 @@ class NoteDetailController extends GetxController {
       for (var item in notesData) {
         final note = item;
 
-        // Simpan ke storage
         storage.write(note.id, note.toJson());
 
-        // Update list
         final index = notes.indexWhere((n) => n.id == note.id);
         if (index == -1) {
           notes.add(note);
@@ -321,7 +299,6 @@ class NoteDetailController extends GetxController {
     return folders.keys.cast<String>().toList();
   }
 
-  // WhatsApp-like formatting functions
   void applyBoldFormat() {
     final selection = textController.selection;
     final text = textController.text;
@@ -413,7 +390,6 @@ class NoteDetailController extends GetxController {
     final selection = textController.selection;
     final text = textController.text;
 
-    // Find current line
     final preText = text.substring(0, selection.start);
     final lastNewLine = preText.lastIndexOf('\n');
     final currentLineStart = lastNewLine == -1 ? 0 : lastNewLine + 1;
@@ -444,7 +420,6 @@ class NoteDetailController extends GetxController {
     }
   }
 
-  // Bottom Navigation Items
   final List<BottomNavigationBarItem> bottomNavItems = [
     const BottomNavigationBarItem(icon: Icon(Icons.format_bold), label: 'Bold'),
     const BottomNavigationBarItem(
@@ -722,7 +697,7 @@ class NoteDetailController extends GetxController {
         final data = jsonDecode(result);
         if (data['transcript'] != null) {
           textController.text += '\n${data['transcript']}\n';
-          Get.snackbar('Berhasil', 'Audio berhasil ditranskripsi');
+          // Get.snackbar('Berhasil', 'Audio berhasil ditranskripsi');
         } else {
           Get.snackbar('Gagal', 'Transkripsi tidak ditemukan');
         }

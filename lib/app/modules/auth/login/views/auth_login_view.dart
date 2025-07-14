@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vision_aid_app/app/data/services/api_service.dart';
@@ -129,7 +131,7 @@ class LoginView extends StatelessWidget {
                     box.write('username', user['username']);
                     box.write('email', user['email']);
                     box.write('api_key', user['api_key']);
-                    
+
                     final notes = await ApiService.fetchAllNotes();
 
                     for (final note in notes) {
@@ -145,16 +147,33 @@ class LoginView extends StatelessWidget {
                       }
                       box.write('folders', folders);
                     }
+                    final reminders = await ApiService.fetchAllReminders();
+                    final reminderMap = <String, List<Map<String, dynamic>>>{};
 
-                    // ✅ Navigasi ke halaman home
+                    for (final reminder in reminders) {
+                      final dayKey =
+                          DateTime(
+                            reminder.day.year,
+                            reminder.day.month,
+                            reminder.day.day,
+                          ).toIso8601String();
+
+                      if (!reminderMap.containsKey(dayKey)) {
+                        reminderMap[dayKey] = [];
+                      }
+
+                      reminderMap[dayKey]!.add(reminder.toJson());
+                    }
+
+                    box.write('events', json.encode(reminderMap));
+
                     Get.offAllNamed('/home');
 
-                    // Opsional: Notifikasi
-                    Get.snackbar(
-                      "Berhasil",
-                      "Login Google berhasil",
-                      snackPosition: SnackPosition.BOTTOM,
-                    );
+                    // Get.snackbar(
+                    //   "Berhasil",
+                    //   "Login Google berhasil",
+                    //   snackPosition: SnackPosition.BOTTOM,
+                    // );
                   } else {
                     Get.snackbar(
                       "Gagal",

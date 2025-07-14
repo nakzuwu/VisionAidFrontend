@@ -50,7 +50,7 @@ class LoginHistoryView extends GetView<LoginHistoryController> {
                     ),
                   ),
                 ),
-                const Divider(), // Batas antar item history
+                const Divider(),
               ],
             );
           },

@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:vision_aid_app/app/modules/calendar/controllers/calendar_controller.dart';
+import 'package:vision_aid_app/app/modules/home/controllers/home_controller.dart';
 import 'package:vision_aid_app/app/modules/note_detail/controllers/note_detail_controller.dart';
 
 import '../modules/app_settings/bindings/app_settings_binding.dart';
@@ -40,7 +42,21 @@ class AppPages {
   static const INITIAL = Routes.AUTH_LOGIN;
 
   static final routes = [
-    GetPage(name: _Paths.HOME, page: () => HomeView(), binding: HomeBinding()),
+    GetPage(
+      name: _Paths.HOME,
+      page: () => HomeView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<NoteDetailController>(
+          () => NoteDetailController(),
+          fenix: true,
+        );
+        Get.lazyPut<CalendarController>(
+          () => CalendarController(),
+          fenix: true,
+        );
+        Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
+      }),
+    ),
     GetPage(
       name: _Paths.SPLASH,
       page: () => SplashView(),

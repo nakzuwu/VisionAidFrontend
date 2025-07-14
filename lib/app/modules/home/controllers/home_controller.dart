@@ -1,6 +1,8 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:vision_aid_app/app/data/model/note_model.dart';
+import 'package:vision_aid_app/app/modules/note_detail/controllers/note_detail_controller.dart';
 
 class HomeController extends GetxController {
   final count = 0.obs;
@@ -11,7 +13,25 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadRecentNotes();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      loadRecentNotes();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.isRegistered<NoteDetailController>()) {
+        Get.find<NoteDetailController>().loadAllNotes();
+      }
+    });
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+  }
+
+  @override
+  void onClose() {
+    super.onClose();
+    recentNotes.clear();
   }
 
   void loadRecentNotes() {
@@ -42,7 +62,6 @@ class HomeController extends GetxController {
     recentNotes.value = sorted.take(3).toList();
   }
 
-  // Tambahkan ini untuk refresh data saat kembali ke home
   void refreshRecentNotes() {
     loadRecentNotes();
   }

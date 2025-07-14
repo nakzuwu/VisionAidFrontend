@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:vision_aid_app/app/modules/home/controllers/home_controller.dart';
 
+
 class FolderController extends GetxController {
   final storage = GetStorage();
   var folders = <String, List<String>>{}.obs;
@@ -27,12 +28,12 @@ class FolderController extends GetxController {
     folders.value = Map<String, List<String>>.from(
       saved.map((key, value) => MapEntry(key, List<String>.from(value))),
     );
-    _triggerHomeRefresh(); // Tambahkan ini
+    _triggerHomeRefresh(); 
   }
 
   void _saveFolders() {
     storage.write('folders', folders);
-    _triggerHomeRefresh(); // Tambahkan ini
+    _triggerHomeRefresh(); 
   }
 
   void _triggerHomeRefresh() {
@@ -41,4 +42,5 @@ class FolderController extends GetxController {
       homeController.loadRecentNotes();
     }
   }
+  
 }

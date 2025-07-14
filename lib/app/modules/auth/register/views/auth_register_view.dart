@@ -118,7 +118,7 @@ class RegisterView extends StatelessWidget {
                 icon: Image.asset(
                   'assets/google_icon.png',
                   height: 24,
-                ), // pastikan ikon tersedia
+                ),
                 label: const Text('Login dengan Google'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
