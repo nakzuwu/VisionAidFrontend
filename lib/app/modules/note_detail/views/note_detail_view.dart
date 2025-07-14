@@ -4,26 +4,23 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:vision_aid_app/app/modules/note_detail/controllers/note_detail_controller.dart';
 
+// ... import tetap
+import 'package:flutter/services.dart';
+
 class NoteDetailView extends StatelessWidget {
   const NoteDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final noteId = Get.arguments as String?;
-    final controller = Get.put(
-      NoteDetailController(), 
-      tag: noteId?.toString(), 
-    );
-    final noteController = Get.find<NoteDetailController>(tag: noteId);
+    final controller = Get.put(NoteDetailController(), tag: noteId?.toString());
     final id = Get.arguments;
     final recent = GetStorage().read<List>('recent_notes') ?? [];
 
     if (id != null) {
       recent.remove(id);
       recent.insert(0, id);
-
       if (recent.length > 3) recent.removeRange(3, recent.length);
-
       GetStorage().write('recent_notes', recent);
     }
 
@@ -49,7 +46,7 @@ class NoteDetailView extends StatelessWidget {
               );
 
               final summary = await controller.summarizeText(fullText);
-              Get.back(); 
+              Get.back();
 
               if (summary == null) {
                 Get.snackbar('Gagal', 'Gagal merangkum catatan');
@@ -75,7 +72,7 @@ class NoteDetailView extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {
                         controller.textController.text = summaryController.text;
-                        Get.back(); 
+                        Get.back();
                       },
                       child: const Text('Gunakan Ringkasan'),
                     ),
@@ -104,76 +101,123 @@ class NoteDetailView extends StatelessWidget {
           ),
         ],
       ),
+
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              DropdownButtonFormField<String>(
-                value:
-                    controller.folderList.contains(
-                          controller.selectedFolder.value,
+        return Column(
+          children: [
+            const SizedBox(height: 8),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child:
+                    controller.showPreview.value
+                        ? SingleChildScrollView(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: RichText(
+                              textAlign: TextAlign.left,
+                              text: controller.parseRichText(
+                                controller.textController.text,
+                              ),
+                            ),
+                          ),
                         )
-                        ? controller.selectedFolder.value
-                        : null, 
-                onChanged: (value) {
-                  if (value != null) {
-                    controller.selectedFolder.value = value;
-                  }
-                },
-                hint: const Text('Pilih Folder'),
-                items:
-                    controller.folderList.toSet().toList().map((folderName) {
-                      return DropdownMenuItem(
-                        value: folderName,
-                        child: Text(folderName),
-                      );
-                    }).toList(),
+                        : TextField(
+                          controller: controller.textController,
+                          maxLines: null,
+                          expands: true,
+                          keyboardType: TextInputType.multiline,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Ketik catatan Anda di sini...',
+                          ),
+                        ),
               ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: TextField(
-                  controller: controller.textController,
-                  maxLines: null,
-                  expands: true,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Ketik catatan Anda di sini...',
+            ),
+            ...controller.images.map((imagePath) {
+              return Stack(
+                children: [
+                  Image.file(File(imagePath)),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red),
+                      onPressed: () => controller.images.remove(imagePath),
+                    ),
                   ),
-                ),
+                ],
+              );
+            }),
+            ...controller.remoteImages.map((imageUrl) {
+              return Stack(
+                children: [
+                  Image.network(imageUrl),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red),
+                      onPressed: () => controller.remoteImages.remove(imageUrl),
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ],
+        );
+      }),
+      bottomNavigationBar: Obx(() {
+        if (controller.showPreview.value) return const SizedBox.shrink();
+
+        return BottomAppBar(
+          color: Colors.grey[100],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                tooltip: 'Bold',
+                icon: const Icon(Icons.format_bold),
+                onPressed: () => controller.insertFormat('**', '**'),
               ),
-              ...controller.images.map((imagePath) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Image.file(File(imagePath)),
-                );
-              }),
-              ...controller.remoteImages.map((imageUrl) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Image.network(imageUrl),
-                );
-              }),
+              IconButton(
+                tooltip: 'Italic',
+                icon: const Icon(Icons.format_italic),
+                onPressed: () => controller.insertFormat('__', '__'),
+              ),
+              IconButton(
+                tooltip: 'Strikethrough',
+                icon: const Icon(Icons.format_strikethrough),
+                onPressed: () => controller.insertFormat('~~', '~~'),
+              ),
+              IconButton(
+                tooltip: 'Highlight',
+                icon: const Icon(Icons.highlight),
+                onPressed: () => controller.insertFormat('==', '=='),
+              ),
+              IconButton(
+                tooltip: 'List',
+                icon: const Icon(Icons.format_list_bulleted),
+                onPressed: () => controller.insertListItem(),
+              ),
             ],
           ),
         );
       }),
-      bottomNavigationBar: Obx(
-        () => BottomNavigationBar(
-          currentIndex: controller.currentIndex.value,
-          onTap: controller.changeTab,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: const Color(0xFFFFEB3B),
-          selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.black54,
-          items: controller.bottomNavItems,
+      floatingActionButton: Obx(
+        () => FloatingActionButton.extended(
+          onPressed: () => controller.showPreview.toggle(),
+          icon: Icon(
+            controller.showPreview.value ? Icons.edit : Icons.remove_red_eye,
+          ),
+          label: Text(controller.showPreview.value ? 'Edit' : 'Preview'),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

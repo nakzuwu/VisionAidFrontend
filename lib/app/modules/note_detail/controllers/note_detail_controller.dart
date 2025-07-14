@@ -30,6 +30,7 @@ class NoteDetailController extends GetxController {
   final selectedText = ''.obs;
   final TextEditingController summaryController = TextEditingController();
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
+  final showPreview = false.obs;
   String? noteId;
   bool isNewNote = false;
 
@@ -94,7 +95,7 @@ class NoteDetailController extends GetxController {
       updatedAt: now,
       images: [...images, ...remoteImages],
       isSynced: false,
-      lastOpened: now, 
+      lastOpened: now,
     );
 
     storage.write(id, note.toJson());
@@ -135,6 +136,136 @@ class NoteDetailController extends GetxController {
     if (isNewNote) {
       isNewNote = false;
       Get.offNamed(Get.currentRoute, arguments: id, preventDuplicates: false);
+    }
+  }
+
+  TextSpan parseRichText(String input) {
+    final List<TextSpan> spans = [];
+
+    final pattern = RegExp(
+      r'(\*\*(.*?)\*\*|__([^_]+)__|~~(.*?)~~|- (.*?)\n?|==(.*?)==)',
+      dotAll: true,
+    );
+
+    int lastMatchEnd = 0;
+
+    for (final match in pattern.allMatches(input)) {
+      if (match.start > lastMatchEnd) {
+        spans.add(TextSpan(text: input.substring(lastMatchEnd, match.start)));
+      }
+
+      final bold = match.group(2);
+      final italic = match.group(3);
+      final strike = match.group(4);
+      final listItem = match.group(5);
+      final highlight = match.group(6);
+
+      if (bold != null) {
+        spans.add(
+          TextSpan(
+            text: bold,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        );
+      } else if (italic != null) {
+        spans.add(
+          TextSpan(
+            text: italic,
+            style: const TextStyle(fontStyle: FontStyle.italic),
+          ),
+        );
+      } else if (strike != null) {
+        spans.add(
+          TextSpan(
+            text: strike,
+            style: const TextStyle(decoration: TextDecoration.lineThrough),
+          ),
+        );
+      } else if (listItem != null) {
+        spans.add(TextSpan(text: '• $listItem\n'));
+      } else if (highlight != null) {
+        spans.add(
+          TextSpan(
+            text: highlight,
+            style: const TextStyle(backgroundColor: Colors.yellow),
+          ),
+        );
+      }
+
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < input.length) {
+      spans.add(TextSpan(text: input.substring(lastMatchEnd)));
+    }
+
+    return TextSpan(
+      children: spans,
+      style: const TextStyle(color: Colors.black),
+    );
+  }
+
+  void insertFormat(String prefix, String suffix) {
+    final text = textController.text;
+    final selection = textController.selection;
+
+    final start = selection.start;
+    final end = selection.end;
+
+    final selected =
+        start >= 0 && end >= 0 && start != end
+            ? text.substring(start, end)
+            : 'teks';
+
+    final newText = text.replaceRange(start, end, '$prefix$selected$suffix');
+
+    textController.value = textController.value.copyWith(
+      text: newText,
+      selection: TextSelection.collapsed(
+        offset:
+            start +
+            prefix.length +
+            selected.length +
+            suffix.length -
+            suffix.length,
+      ),
+    );
+  }
+
+  void insertListItem() {
+    final text = textController.text;
+    final selection = textController.selection;
+
+    final insertion = '- ';
+    final start = selection.start;
+
+    final newText = text.replaceRange(start, start, insertion);
+
+    textController.value = textController.value.copyWith(
+      text: newText,
+      selection: TextSelection.collapsed(offset: start + insertion.length),
+    );
+  }
+
+  Future<void> summarizeAndReplace() async {
+    final fullText = textController.text.trim();
+    if (fullText.isEmpty) {
+      Get.snackbar('Gagal', 'Catatan kosong');
+      return;
+    }
+
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+
+    final summary = await summarizeText(fullText);
+    Get.back();
+
+    if (summary != null) {
+      textController.text = summary;
+    } else {
+      Get.snackbar('Gagal', 'Gagal merangkum catatan');
     }
   }
 

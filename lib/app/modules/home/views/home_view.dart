@@ -473,12 +473,13 @@ class HomeView extends GetView<HomeController> {
                   note.title,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
+                  maxLines: 1, // 🔸 Batasi 1 baris
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  note.content.length > 50
-                      ? '${note.content.substring(0, 50)}...'
-                      : note.content,
+                  note.content,
+                  maxLines: 4, // 🔸 Batasi isi catatan maksimal 4 baris
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
